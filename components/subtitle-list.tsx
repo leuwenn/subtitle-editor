@@ -20,7 +20,7 @@ export function SubtitleList({
   const [editText, setEditText] = useState("");
 
   return (
-    <div className="h-[calc(100vh-10rem)] overflow-y-auto p-4">
+    <div className="h-[calc(100vh-20rem)] overflow-y-scroll p-4">
       {subtitles.map((subtitle, index) => (
         <div key={subtitle.id}>
           <div
