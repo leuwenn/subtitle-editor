@@ -1,8 +1,9 @@
 import type { Subtitle } from "@/types/subtitle";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Merge, Plus, Trash2 } from "lucide-react";
 interface SubtitleListProps {
   subtitles: Subtitle[];
+  currentTime?: number;
   onUpdateSubtitle: (id: number, newText: string) => void;
   onMergeSubtitles: (id1: number, id2: number) => void;
   onAddSubtitle: (beforeId: number, afterId: number) => void;
@@ -11,6 +12,7 @@ interface SubtitleListProps {
 
 export function SubtitleList({
   subtitles,
+  currentTime = 0,
   onUpdateSubtitle,
   onMergeSubtitles,
   onAddSubtitle,
@@ -18,14 +20,50 @@ export function SubtitleList({
 }: SubtitleListProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Function to convert SRT timestamp to seconds
+  const timeToSeconds = (time: string): number => {
+    const [hours, minutes, seconds] = time.split(':').map(part => 
+      parseFloat(part.replace(',', '.'))
+    );
+    return hours * 3600 + minutes * 60 + seconds;
+  };
+
+  useEffect(() => {
+    if (!listRef.current) return;
+
+    // Find the current subtitle based on playback time
+    const currentSubtitle = subtitles.find(
+      sub =>
+        timeToSeconds(sub.startTime) <= currentTime &&
+        timeToSeconds(sub.endTime) >= currentTime
+    );
+
+    if (currentSubtitle) {
+      const subtitleElement = document.getElementById(`subtitle-${currentSubtitle.id}`);
+      if (subtitleElement) {
+        subtitleElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }
+    }
+  }, [currentTime, subtitles]);
 
   return (
-    <div className="h-[calc(100vh-20rem)] overflow-y-scroll p-4">
+    <div ref={listRef} className="h-[calc(100vh-20rem)] overflow-y-scroll p-4">
       {subtitles.map((subtitle, index) => (
         <div key={subtitle.id}>
           <div
+            id={`subtitle-${subtitle.id}`}
             key={subtitle.id}
-            className="p-4 border-b border-gray-300 hover:bg-secondary/50 cursor-pointer grid grid-cols-[2rem_6rem_1fr] gap-4 items-center"
+            className={`p-4 border-b border-gray-300 hover:bg-secondary/50 cursor-pointer grid grid-cols-[2rem_6rem_1fr] gap-4 items-center ${
+              timeToSeconds(subtitle.startTime) <= currentTime &&
+              timeToSeconds(subtitle.endTime) >= currentTime
+                ? "bg-secondary"
+                : ""
+            }`}
           >
             <div className="text-sm text-muted-foreground font-mono">
               {subtitle.id}

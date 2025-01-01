@@ -73,6 +73,7 @@ export default function Home() {
               {subtitles.length > 0 ? (
                 <SubtitleList
                   subtitles={subtitles}
+                  currentTime={playbackTime}
                   onUpdateSubtitle={(id: number, newText: string) => {
                     setSubtitles(updateSubtitle(subtitles, id, newText));
                   }}
