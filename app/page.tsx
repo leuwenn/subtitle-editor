@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SubtitleList } from "@/components/subtitle-list";
 import { parseSRT } from "@/lib/srtParser";
 import type { Subtitle } from "@/types/subtitle";
+import { updateSubtitle, mergeSubtitles, addSubtitle, deleteSubtitle } from "@/lib/subtitleOperations";
 
 export default function Home() {
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
@@ -43,9 +44,16 @@ export default function Home() {
               <SubtitleList 
                 subtitles={subtitles} 
                 onUpdateSubtitle={(id: number, newText: string) => {
-                  setSubtitles(subtitles.map(sub => 
-                    sub.id === id ? { ...sub, text: newText } : sub
-                  ));
+                  setSubtitles(updateSubtitle(subtitles, id, newText));
+                }}
+                onMergeSubtitles={(id1: number, id2: number) => {
+                  setSubtitles(mergeSubtitles(subtitles, id1, id2));
+                }}
+                onAddSubtitle={(beforeId: number, afterId: number) => {
+                  setSubtitles(addSubtitle(subtitles, beforeId, afterId));
+                }}
+                onDeleteSubtitle={(id: number) => {
+                  setSubtitles(deleteSubtitle(subtitles, id));
                 }}
               />
             ) : (
