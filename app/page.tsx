@@ -113,8 +113,18 @@ export default function Home() {
             mediaFile={mediaFile}
             currentTime={playbackTime}
             isPlaying={isPlaying}
+            subtitles={subtitles}
             onSeek={setPlaybackTime}
             onPlayPause={setIsPlaying}
+            onUpdateSubtitleTiming={(id, startTime, endTime) => {
+              setSubtitles(subs => 
+                subs.map(sub => 
+                  sub.id === id 
+                    ? { ...sub, startTime, endTime }
+                    : sub
+                )
+              );
+            }}
           />
         </div>
       </div>
