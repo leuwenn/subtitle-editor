@@ -4,7 +4,7 @@ import { useWavesurfer } from "@wavesurfer/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Timeline from "wavesurfer.js/dist/plugins/timeline.esm.js";
 import Hover from "wavesurfer.js/dist/plugins/hover.esm.js";
-import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
+import RegionsPlugin, { Region } from "wavesurfer.js/dist/plugins/regions.esm.js";
 import type { Subtitle } from "@/types/subtitle";
 
 // Function to convert SRT timestamp to seconds
@@ -39,6 +39,9 @@ interface WaveformVisualizerProps {
     startTime: string,
     endTime: string
   ) => void;
+  onUpdateSubtitleText: (id: number, newText: string) => void;
+  onDeleteSubtitle: (id: number) => void;
+  onUpdateRegionContent: (id: number, content: string) => void;
 }
 
 export function WaveformVisualizer({
@@ -49,9 +52,13 @@ export function WaveformVisualizer({
   onSeek,
   onPlayPause,
   onUpdateSubtitleTiming,
+  onUpdateSubtitleText,
+  onDeleteSubtitle,
+  onUpdateRegionContent,
 }: WaveformVisualizerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mediaUrl, setMediaUrl] = useState<string>("");
+  const subtitleToRegionMap = useRef<Map<number, Region>>(new Map());
 
   const { wavesurfer } = useWavesurfer({
     container: containerRef,
@@ -205,52 +212,113 @@ export function WaveformVisualizer({
           .find((plugin) => plugin instanceof RegionsPlugin) as RegionsPlugin;
 
         if (regionsPlugin) {
-          // Store existing regions' drag and resize states
-          regionsPlugin.clearRegions();
-
-          subtitles.forEach((subtitle, i) => {
+          // Update or create regions
+          subtitles.forEach((subtitle) => {
+            const region = subtitleToRegionMap.current.get(subtitle.id);
             const start = timeToSeconds(subtitle.startTime);
             const end = timeToSeconds(subtitle.endTime);
-            regionsPlugin.addRegion({
-              id: subtitle.id.toString(),
-              start,
-              end,
-              content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
-              color: "#ef444420",
-              drag: true,
-              resize: true,
-              minLength: 0.1,
-            });
+
+            if (region) {
+              // Update existing region
+              region.setOptions({
+                start,
+                end,
+                content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
+              });
+            } else {
+              // Create new region
+              const newRegion = regionsPlugin.addRegion({
+                id: subtitle.id.toString(),
+                start,
+                end,
+                content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
+                color: "#ef444420",
+                drag: true,
+                resize: true,
+                minLength: 0.1,
+              });
+              subtitleToRegionMap.current.set(subtitle.id, newRegion);
+            }
           });
 
-          // Add region update handler
-          regionsPlugin.on("region-updated", (region) => {
-            const subtitleId = Number.parseInt(region.id);
-            const newStartTime = secondsToTime(region.start);
-            const newEndTime = secondsToTime(region.end);
-            onUpdateSubtitleTiming(subtitleId, newStartTime, newEndTime);
+          // Remove regions for deleted subtitles
+          const subtitleIds = new Set(subtitles.map((s) => s.id));
+          subtitleToRegionMap.current.forEach((region, subtitleId) => {
+            if (!subtitleIds.has(subtitleId)) {
+              region.remove();
+              subtitleToRegionMap.current.delete(subtitleId);
+            }
           });
         }
       };
 
+      const handleRegionUpdate = (region: Region) => {
+        const subtitleId = Number.parseInt(region.id);
+        const newStartTime = secondsToTime(region.start);
+        const newEndTime = secondsToTime(region.end);
+
+        // Update the region content
+        const subtitle = subtitles.find((s) => s.id === subtitleId);
+        if (subtitle) {
+          region.setOptions({
+            content: `${newStartTime} ${subtitle.text} ${newEndTime}`,
+          });
+        }
+
+        onUpdateSubtitleTiming(subtitleId, newStartTime, newEndTime);
+      };
+
+      wavesurfer.on("ready", () => {
+        updateRegions(); // Call updateRegions after wavesurfer is ready
+
+        const regionsPlugin = wavesurfer
+          .getActivePlugins()
+          .find((plugin) => plugin instanceof RegionsPlugin) as RegionsPlugin;
+
+        if (regionsPlugin) {
+          regionsPlugin.on("region-updated", handleRegionUpdate);
+        }
+
+        if (isPlaying) {
+          wavesurfer.play();
+        } else {
+          wavesurfer.pause();
+        }
+      });
+
       wavesurfer.on("play", handlePlay);
-      wavesurfer.on("ready", updateRegions);
-
-      // Update regions when subtitles change
-      updateRegions();
-
-      if (isPlaying) {
-        wavesurfer.play();
-      } else {
-        wavesurfer.pause();
-      }
 
       return () => {
         wavesurfer.un("play", handlePlay);
         wavesurfer.un("ready", updateRegions);
       };
     }
-  }, [wavesurfer, isPlaying, subtitles, onUpdateSubtitleTiming]);
+  }, [
+    wavesurfer,
+    isPlaying,
+    subtitles,
+    onUpdateSubtitleTiming,
+    onUpdateSubtitleText,
+    onDeleteSubtitle,
+  ]);
+
+  // Update region content when subtitle text is updated
+  useEffect(() => {
+    if (wavesurfer) {
+      const regionsPlugin = wavesurfer
+        .getActivePlugins()
+        .find((plugin) => plugin instanceof RegionsPlugin) as RegionsPlugin;
+
+      subtitles.forEach((subtitle) => {
+        const region = subtitleToRegionMap.current.get(subtitle.id);
+        if (region) {
+          region.setOptions({
+            content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
+          });
+        }
+      });
+    }
+  }, [subtitles, wavesurfer]);
 
   return (
     <div className="relative w-full h-full">

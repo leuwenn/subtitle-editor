@@ -117,11 +117,28 @@ export default function Home() {
             onSeek={setPlaybackTime}
             onPlayPause={setIsPlaying}
             onUpdateSubtitleTiming={(id, startTime, endTime) => {
-              setSubtitles(subs => 
-                subs.map(sub => 
-                  sub.id === id 
-                    ? { ...sub, startTime, endTime }
-                    : sub
+              setSubtitles((subs) =>
+                subs.map((sub) =>
+                  sub.id === id ? { ...sub, startTime, endTime } : sub
+                )
+              );
+            }}
+            onUpdateSubtitleText={(id: number, newText: string) => {
+              setSubtitles(updateSubtitle(subtitles, id, newText));
+            }}
+            onDeleteSubtitle={(id: number) => {
+              setSubtitles(deleteSubtitle(subtitles, id));
+            }}
+            onUpdateRegionContent={(id: number, content: string) => {
+              // Find the region by ID and update its content
+              setSubtitles((prevSubtitles) =>
+                prevSubtitles.map((subtitle) =>
+                  subtitle.id === id
+                    ? {
+                        ...subtitle,
+                        content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
+                      }
+                    : subtitle
                 )
               );
             }}
