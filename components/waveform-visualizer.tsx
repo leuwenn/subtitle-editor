@@ -4,7 +4,9 @@ import { useWavesurfer } from "@wavesurfer/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Timeline from "wavesurfer.js/dist/plugins/timeline.esm.js";
 import Hover from "wavesurfer.js/dist/plugins/hover.esm.js";
-import RegionsPlugin, { Region } from "wavesurfer.js/dist/plugins/regions.esm.js";
+import RegionsPlugin, {
+  type Region,
+} from "wavesurfer.js/dist/plugins/regions.esm.js";
 import type { Subtitle } from "@/types/subtitle";
 
 // Function to convert SRT timestamp to seconds
@@ -60,6 +62,9 @@ export function WaveformVisualizer({
   const [mediaUrl, setMediaUrl] = useState<string>("");
   const subtitleToRegionMap = useRef<Map<number, Region>>(new Map());
 
+  /****************************************************************
+   *  Initialize the wavesurfer with options and plugins
+   * */
   const { wavesurfer } = useWavesurfer({
     container: containerRef,
     height: 100,
@@ -97,35 +102,6 @@ export function WaveformVisualizer({
       [] // Keep the dependency array empty
     ),
   });
-
-  // Sync progress with the right panel meidia player
-  useEffect(() => {
-    if (wavesurfer) {
-      const handleSeek = (time: number) => {
-        onSeek(time);
-      };
-
-      wavesurfer.on("interaction", handleSeek);
-
-      return () => {
-        wavesurfer.un("interaction", handleSeek);
-      };
-    }
-  }, [wavesurfer, onSeek]);
-
-  // Sync current time with the media player
-  useEffect(() => {
-    if (wavesurfer) {
-      wavesurfer.setTime(currentTime);
-    }
-  }, [wavesurfer, currentTime]);
-
-  // Load media file into wavesurfer
-  useEffect(() => {
-    if (mediaFile) {
-      setMediaUrl(URL.createObjectURL(mediaFile));
-    }
-  }, [mediaFile]);
 
   // Handle zoom level based on duration
   useEffect(() => {
@@ -177,6 +153,39 @@ export function WaveformVisualizer({
     }
   }, [wavesurfer]);
 
+  // Load media file into wavesurfer
+  useEffect(() => {
+    if (mediaFile) {
+      setMediaUrl(URL.createObjectURL(mediaFile));
+    }
+  }, [mediaFile]);
+
+  /****************************************************************
+   *  Sync the wavesurfer progress with the right panel media player
+   *  */
+
+  // If you click the waveform, seek to that position in the media player
+  useEffect(() => {
+    if (wavesurfer) {
+      const handleSeek = (time: number) => {
+        onSeek(time);
+      };
+
+      wavesurfer.on("interaction", handleSeek);
+
+      return () => {
+        wavesurfer.un("interaction", handleSeek);
+      };
+    }
+  }, [wavesurfer, onSeek]);
+
+  // If the media player seeks, update the waveform progressß
+  useEffect(() => {
+    if (wavesurfer) {
+      wavesurfer.setTime(currentTime);
+    }
+  }, [wavesurfer, currentTime]);
+
   // Handle spacebar for play/pause
   useEffect(() => {
     const container = containerRef.current;
@@ -199,6 +208,10 @@ export function WaveformVisualizer({
     };
   }, [isPlaying, onPlayPause]); // Add isPlaying and onPlayPause as dependencies
 
+  /****************************************************************
+   * Handle subtitle region creation and updates
+   * */
+
   // Handle subtitle region creation and updates
   useEffect(() => {
     if (wavesurfer) {
@@ -213,7 +226,7 @@ export function WaveformVisualizer({
 
         if (regionsPlugin) {
           // Update or create regions
-          subtitles.forEach((subtitle) => {
+          subtitles.map((subtitle) => {
             const region = subtitleToRegionMap.current.get(subtitle.id);
             const start = timeToSeconds(subtitle.startTime);
             const end = timeToSeconds(subtitle.endTime);
@@ -309,7 +322,7 @@ export function WaveformVisualizer({
         .getActivePlugins()
         .find((plugin) => plugin instanceof RegionsPlugin) as RegionsPlugin;
 
-      subtitles.forEach((subtitle) => {
+      subtitles.map((subtitle) => {
         const region = subtitleToRegionMap.current.get(subtitle.id);
         if (region) {
           region.setOptions({
