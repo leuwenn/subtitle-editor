@@ -67,8 +67,6 @@ export default function WaveformVisualizer({
     waveColor: "#A7F3D0",
     progressColor: "#00d4ff",
     cursorColor: "#b91c1c",
-    barWidth: 2,
-    barGap: 1,
     url: mediaUrl,
     minPxPerSec: 100, // Lower default minimum pixels per second
     fillParent: true, // Start with fill parent true
@@ -246,8 +244,8 @@ export default function WaveformVisualizer({
         id: subtitle.id.toString(),
         start,
         end,
-        content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
-        color: "#ef444420",
+        content: `${subtitle.startTime}\t${subtitle.text}\t${subtitle.endTime}`,
+        color: "#fb923c20",
         drag: true,
         resize: true,
         minLength: 0.1,
@@ -277,17 +275,53 @@ export default function WaveformVisualizer({
     // Called whenever a region is dragged/resized
     const handleRegionUpdate = (region: Region) => {
       const subtitleId = Number.parseInt(region.id);
-      const newStartTime = secondsToTime(region.start);
-      const newEndTime = secondsToTime(region.end);
+      let newStartTime = region.start;
+      let newEndTime = region.end;
+      let adjusted = false;
+
+      // Check for overlaps with other regions and adjust times
+      subtitleToRegionMap.current.forEach((otherRegion, otherId) => {
+        if (otherId !== subtitleId) {
+          if (
+            newStartTime < otherRegion.end &&
+            newEndTime > otherRegion.start
+          ) {
+            // Overlap detected
+            adjusted = true;
+            if (region.start < otherRegion.start) {
+              // Adjust end time to be just before the start of the other region
+              newEndTime = otherRegion.start;
+            } else {
+              // Adjust start time to be just after the end of the other region
+              newStartTime = otherRegion.end;
+            }
+          }
+        }
+      });
+
+      if (adjusted) {
+        // Update the region with adjusted times
+        region.setOptions({
+          start: newStartTime,
+          end: newEndTime,
+        });
+      }
+
+      const newStartTimeFormatted = secondsToTime(newStartTime);
+      const newEndTimeFormatted = secondsToTime(newEndTime);
 
       const subtitle = subtitles.find((s) => s.id === subtitleId);
       if (subtitle) {
         region.setOptions({
-          content: `${newStartTime} ${subtitle.text} ${newEndTime}`,
+          content: `${newStartTimeFormatted} ${subtitle.text} ${newEndTimeFormatted}`,
         });
       }
 
-      onUpdateSubtitleTiming(subtitleId, newStartTime, newEndTime);
+      onUpdateSubtitleTiming(
+        subtitleId,
+        newStartTimeFormatted,
+        newEndTimeFormatted
+      );
     };
 
     // Register events
@@ -325,7 +359,7 @@ export default function WaveformVisualizer({
       const region = subtitleToRegionMap.current.get(subtitle.id);
       if (region?.element) {
         region.setOptions({
-          content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
+          content: `${subtitle.startTime}\t${subtitle.text}\t${subtitle.endTime}`,
         });
       }
     });
