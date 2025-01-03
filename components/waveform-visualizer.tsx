@@ -56,6 +56,7 @@ export default function WaveformVisualizer({
 }: WaveformVisualizerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mediaUrl, setMediaUrl] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
   const subtitleToRegionMap = useRef<Map<number, Region>>(new Map());
 
   /****************************************************************
@@ -150,6 +151,7 @@ export default function WaveformVisualizer({
   // Load media file into wavesurfer
   useEffect(() => {
     if (mediaFile) {
+      setIsLoading(true);
       setMediaUrl(URL.createObjectURL(mediaFile));
     }
   }, [mediaFile]);
@@ -260,8 +262,8 @@ export default function WaveformVisualizer({
   useEffect(() => {
     if (!wavesurfer) return;
 
-    // Called whenever the audio is loaded & WaveSurfer is truly ready
     const handleReady = () => {
+      setIsLoading(false);
       // Build regions once initially
       updateRegions();
       // If you want to auto-play after load:
@@ -373,6 +375,11 @@ export default function WaveformVisualizer({
         role="button"
         tabIndex={0}
       />
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-secondary/50">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
     </div>
   );
 }
