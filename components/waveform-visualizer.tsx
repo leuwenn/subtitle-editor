@@ -29,6 +29,28 @@ const secondsToTime = (seconds: number): string => {
   )}:${secs.toFixed(3).padStart(6, "0").replace(".", ",")}`;
 };
 
+const renderRegionContent = (
+  startTime: string,
+  text: string,
+  endTime: string
+): HTMLElement => {
+  const content = document.createElement("div");
+
+  content.innerHTML = `
+    <div>
+      <div style="display: flex; justify-content: space-between; padding-left: 1rem; padding-right: 1rem; padding-top: 0.5rem;">
+        <em>${startTime}</em>
+        <em>${endTime}</em>
+      </div>
+      <div style="padding-left: 1rem; padding-right: 1rem; padding-bottom: 0.5rem; margin-top: 3rem;">
+        <span>${text}</span>
+      </div>
+    </div>;
+`;
+
+  return content;
+};
+
 interface WaveformVisualizerProps {
   mediaFile: File | null;
   currentTime: number;
@@ -241,12 +263,18 @@ export default function WaveformVisualizer({
       const start = timeToSeconds(subtitle.startTime);
       const end = timeToSeconds(subtitle.endTime);
 
+      const content = renderRegionContent(
+        subtitle.startTime,
+        subtitle.text,
+        subtitle.endTime
+      );
+
       // Create the new region
       const region = regionsPlugin.addRegion({
         id: subtitle.id.toString(),
         start,
         end,
-        content: `${subtitle.startTime}\t${subtitle.text}\t${subtitle.endTime}`,
+        content,
         color: "#fb923c20",
         drag: true,
         resize: true,
@@ -277,6 +305,7 @@ export default function WaveformVisualizer({
     // Called whenever a region is dragged/resized
     const handleRegionUpdate = (region: Region) => {
       const subtitleId = Number.parseInt(region.id);
+      const contentEl = region.content as HTMLElement;
       let newStartTime = region.start;
       let newEndTime = region.end;
       let adjusted = false;
@@ -315,7 +344,11 @@ export default function WaveformVisualizer({
       const subtitle = subtitles.find((s) => s.id === subtitleId);
       if (subtitle) {
         region.setOptions({
-          content: `${newStartTimeFormatted} ${subtitle.text} ${newEndTimeFormatted}`,
+          content: renderRegionContent(
+            newStartTimeFormatted,
+            subtitle.text,
+            newEndTimeFormatted
+          ),
         });
       }
 
@@ -361,7 +394,11 @@ export default function WaveformVisualizer({
       const region = subtitleToRegionMap.current.get(subtitle.id);
       if (region?.element) {
         region.setOptions({
-          content: `${subtitle.startTime}\t${subtitle.text}\t${subtitle.endTime}`,
+          content: renderRegionContent(
+            subtitle.startTime,
+            subtitle.text,
+            subtitle.endTime
+          ),
         });
       }
     });
