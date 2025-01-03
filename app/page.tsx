@@ -11,7 +11,7 @@ import {
 } from "@/lib/subtitleOperations";
 import type { Subtitle } from "@/types/subtitle";
 import dynamic from "next/dynamic";
-import { useRef, useState } from "react";
+import { useCallback, useState } from "react";
 
 const WaveformVisualizer = dynamic(
   () => import("@/components/waveform-visualizer"),
@@ -36,6 +36,11 @@ export default function Home() {
     const parsedSubtitles = parseSRT(text);
     setSubtitles(parsedSubtitles);
   };
+
+  // Use useCallback to memoize onDeleteSubtitle
+  const onDeleteSubtitle = useCallback((id: number) => {
+    setSubtitles((prevSubtitles) => deleteSubtitle(prevSubtitles, id));
+  }, []);
 
   return (
     <div className="flex flex-col h-screen">
@@ -133,22 +138,7 @@ export default function Home() {
             onUpdateSubtitleText={(id: number, newText: string) => {
               setSubtitles(updateSubtitle(subtitles, id, newText));
             }}
-            onDeleteSubtitle={(id: number) => {
-              setSubtitles(deleteSubtitle(subtitles, id));
-            }}
-            onUpdateRegionContent={(id: number, content: string) => {
-              // Find the region by ID and update its content
-              setSubtitles((prevSubtitles) =>
-                prevSubtitles.map((subtitle) =>
-                  subtitle.id === id
-                    ? {
-                        ...subtitle,
-                        content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
-                      }
-                    : subtitle
-                )
-              );
-            }}
+            onDeleteSubtitle={onDeleteSubtitle}
           />
         </div>
       </div>

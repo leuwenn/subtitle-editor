@@ -24,9 +24,9 @@ export function SubtitleList({
 
   // Function to convert SRT timestamp to seconds
   const timeToSeconds = (time: string): number => {
-    const [hours, minutes, seconds] = time.split(':').map(part => 
-      parseFloat(part.replace(',', '.'))
-    );
+    const [hours, minutes, seconds] = time
+      .split(":")
+      .map((part) => Number.parseFloat(part.replace(",", ".")));
     return hours * 3600 + minutes * 60 + seconds;
   };
 
@@ -35,17 +35,19 @@ export function SubtitleList({
 
     // Find the current subtitle based on playback time
     const currentSubtitle = subtitles.find(
-      sub =>
+      (sub) =>
         timeToSeconds(sub.startTime) <= currentTime &&
         timeToSeconds(sub.endTime) >= currentTime
     );
 
     if (currentSubtitle) {
-      const subtitleElement = document.getElementById(`subtitle-${currentSubtitle.id}`);
+      const subtitleElement = document.getElementById(
+        `subtitle-${currentSubtitle.id}`
+      );
       if (subtitleElement) {
         subtitleElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
+          behavior: "smooth",
+          block: "center",
         });
       }
     }

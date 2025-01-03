@@ -1,7 +1,7 @@
 "use client";
 
 import { useWavesurfer } from "@wavesurfer/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Timeline from "wavesurfer.js/dist/plugins/timeline.esm.js";
 import Hover from "wavesurfer.js/dist/plugins/hover.esm.js";
 import RegionsPlugin, {
@@ -43,7 +43,6 @@ interface WaveformVisualizerProps {
   ) => void;
   onUpdateSubtitleText: (id: number, newText: string) => void;
   onDeleteSubtitle: (id: number) => void;
-  onUpdateRegionContent: (id: number, content: string) => void;
 }
 
 export default function WaveformVisualizer({
@@ -54,9 +53,6 @@ export default function WaveformVisualizer({
   onSeek,
   onPlayPause,
   onUpdateSubtitleTiming,
-  onUpdateSubtitleText,
-  onDeleteSubtitle,
-  onUpdateRegionContent,
 }: WaveformVisualizerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mediaUrl, setMediaUrl] = useState<string>("");
@@ -68,10 +64,10 @@ export default function WaveformVisualizer({
   const { wavesurfer } = useWavesurfer({
     container: containerRef,
     height: 100,
-    waveColor: "#a3a3a3",
-    progressColor: "#171717",
+    waveColor: "#A7F3D0",
+    progressColor: "#00d4ff",
     cursorColor: "#b91c1c",
-    barWidth: 1,
+    barWidth: 2,
     barGap: 1,
     url: mediaUrl,
     minPxPerSec: 100, // Lower default minimum pixels per second
@@ -84,7 +80,7 @@ export default function WaveformVisualizer({
     plugins: useMemo(
       () => [
         Timeline.create({
-          timeInterval: 0.2,
+          timeInterval: 0.1,
           primaryLabelInterval: 1,
           style: {
             fontSize: "12px",
@@ -227,114 +223,112 @@ export default function WaveformVisualizer({
    * And we only need to re-render the target region box.
    * */
 
-  // Handle subtitle region creation and updates
-  useEffect(() => {
-    if (wavesurfer) {
-      const handlePlay = () => {
-        wavesurfer.setMuted(true);
-      };
+  const updateRegions = useCallback(() => {
+    if (!wavesurfer || wavesurfer.getDuration() === 0) return;
 
-      const updateRegions = () => {
-        const regionsPlugin = wavesurfer
-          .getActivePlugins()
-          .find((plugin) => plugin instanceof RegionsPlugin) as RegionsPlugin;
+    // Grab the plugin by name in Wavesurfer v7
+    const regionsPlugin = wavesurfer
+      .getActivePlugins()
+      .find((p) => p instanceof RegionsPlugin);
+    if (!regionsPlugin) return;
 
-        if (regionsPlugin) {
-          // Update or create regions
-          subtitles.map((subtitle) => {
-            const region = subtitleToRegionMap.current.get(subtitle.id);
-            const start = timeToSeconds(subtitle.startTime);
-            const end = timeToSeconds(subtitle.endTime);
+    // 1) Remove existing regions
+    regionsPlugin.clearRegions();
+    subtitleToRegionMap.current.clear();
 
-            if (region) {
-              // Update existing region
-              region.setOptions({
-                start,
-                end,
-                content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
-              });
-            } else {
-              // Create new region
-              const newRegion = regionsPlugin.addRegion({
-                id: subtitle.id.toString(),
-                start,
-                end,
-                content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
-                color: "#ef444420",
-                drag: true,
-                resize: true,
-                minLength: 0.1,
-              });
-              subtitleToRegionMap.current.set(subtitle.id, newRegion);
-            }
-          });
+    // 2) Add them back in fresh
+    subtitles.map((subtitle) => {
+      const start = timeToSeconds(subtitle.startTime);
+      const end = timeToSeconds(subtitle.endTime);
 
-          // Remove regions for deleted subtitles
-          const subtitleIds = new Set(subtitles.map((s) => s.id));
-          subtitleToRegionMap.current.forEach((region, subtitleId) => {
-            if (!subtitleIds.has(subtitleId)) {
-              region.remove();
-              subtitleToRegionMap.current.delete(subtitleId);
-            }
-          });
-        }
-      };
-
-      const handleRegionUpdate = (region: Region) => {
-        const subtitleId = Number.parseInt(region.id);
-        const newStartTime = secondsToTime(region.start);
-        const newEndTime = secondsToTime(region.end);
-
-        // Update the region content
-        const subtitle = subtitles.find((s) => s.id === subtitleId);
-        if (subtitle) {
-          region.setOptions({
-            content: `${newStartTime} ${subtitle.text} ${newEndTime}`,
-          });
-        }
-
-        onUpdateSubtitleTiming(subtitleId, newStartTime, newEndTime);
-      };
-
-      wavesurfer.on("ready", () => {
-        updateRegions(); // Call updateRegions after wavesurfer is ready
-
-        const regionsPlugin = wavesurfer
-          .getActivePlugins()
-          .find((plugin) => plugin instanceof RegionsPlugin) as RegionsPlugin;
-
-        if (regionsPlugin) {
-          regionsPlugin.on("region-updated", handleRegionUpdate);
-        }
-
-        if (isPlaying) {
-          wavesurfer.play();
-        } else {
-          wavesurfer.pause();
-        }
+      // Create the new region
+      const region = regionsPlugin.addRegion({
+        id: subtitle.id.toString(),
+        start,
+        end,
+        content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
+        color: "#ef444420",
+        drag: true,
+        resize: true,
+        minLength: 0.1,
       });
 
-      wavesurfer.on("play", handlePlay);
+      // Save reference
+      subtitleToRegionMap.current.set(subtitle.id, region);
+    });
+  }, [wavesurfer, subtitles]);
 
-      return () => {
-        wavesurfer.un("play", handlePlay);
-        wavesurfer.un("ready", updateRegions);
-      };
+  // Handle Wavesurfer events
+  useEffect(() => {
+    if (!wavesurfer) return;
+
+    // Called whenever the audio is loaded & WaveSurfer is truly ready
+    const handleReady = () => {
+      // Build regions once initially
+      updateRegions();
+      // If you want to auto-play after load:
+      if (isPlaying) {
+        wavesurfer.play();
+      } else {
+        wavesurfer.pause();
+      }
+    };
+
+    // Called whenever a region is dragged/resized
+    const handleRegionUpdate = (region: Region) => {
+      const subtitleId = Number.parseInt(region.id);
+      const newStartTime = secondsToTime(region.start);
+      const newEndTime = secondsToTime(region.end);
+
+      const subtitle = subtitles.find((s) => s.id === subtitleId);
+      if (subtitle) {
+        region.setOptions({
+          content: `${newStartTime} ${subtitle.text} ${newEndTime}`,
+        });
+      }
+
+      onUpdateSubtitleTiming(subtitleId, newStartTime, newEndTime);
+    };
+
+    // Register events
+    wavesurfer.on("ready", handleReady);
+
+    // Or if you want to do something on "region-updated":
+    const regionsPlugin = wavesurfer
+      .getActivePlugins()
+      .find((p) => p instanceof RegionsPlugin) as RegionsPlugin;
+    if (regionsPlugin) {
+      regionsPlugin.on("region-updated", handleRegionUpdate);
     }
-  }, [wavesurfer, isPlaying, subtitles, onUpdateSubtitleTiming]);
+
+    return () => {
+      // Cleanup
+      wavesurfer.un("ready", handleReady);
+      if (regionsPlugin) {
+        regionsPlugin.un("region-updated", handleRegionUpdate);
+      }
+    };
+  }, [wavesurfer, isPlaying, subtitles, onUpdateSubtitleTiming, updateRegions]);
+
+  useEffect(() => {
+    if (!wavesurfer) return;
+    // Optionally check if (wavesurfer.isReady) here,
+    // but usually if subtitles change after "ready,"
+    // you can just call updateRegions().
+    updateRegions();
+  }, [wavesurfer, subtitles, updateRegions]);
 
   // Update subtitle text requires only updating the target region content
   useEffect(() => {
-    if (wavesurfer) {
-      subtitles.map((subtitle) => {
-        const region = subtitleToRegionMap.current.get(subtitle.id);
-        if (region) {
-          region.setOptions({
-            content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
-          });
-        }
-      });
-    }
+    if (!wavesurfer) return;
+    subtitles.map((subtitle) => {
+      const region = subtitleToRegionMap.current.get(subtitle.id);
+      if (region?.element) {
+        region.setOptions({
+          content: `${subtitle.startTime} ${subtitle.text} ${subtitle.endTime}`,
+        });
+      }
+    });
   }, [subtitles, wavesurfer]);
 
   return (
