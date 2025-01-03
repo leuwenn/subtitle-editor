@@ -1,35 +1,25 @@
 "use client";
 
+import { secondsToTime, timeToSeconds } from "@/lib/utils";
+import type { Subtitle } from "@/types/subtitle";
 import { useWavesurfer } from "@wavesurfer/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Timeline from "wavesurfer.js/dist/plugins/timeline.esm.js";
+import {
+  type ForwardedRef,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Hover from "wavesurfer.js/dist/plugins/hover.esm.js";
 import RegionsPlugin, {
   type Region,
 } from "wavesurfer.js/dist/plugins/regions.esm.js";
-import type { Subtitle } from "@/types/subtitle";
+import Timeline from "wavesurfer.js/dist/plugins/timeline.esm.js";
 
-// Function to convert SRT timestamp to seconds
-const timeToSeconds = (time: string): number => {
-  const [hours, minutes, seconds] = time
-    .split(":")
-    .map((part) => Number.parseFloat(part.replace(",", ".")));
-  return hours * 3600 + minutes * 60 + seconds;
-};
-
-// Function to convert seconds to SRT timestamp format
-const secondsToTime = (seconds: number): string => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-    2,
-    "0"
-  )}:${secs.toFixed(3).padStart(6, "0").replace(".", ",")}`;
-};
-
-const renderRegionContent = (
+const getContentHtml = (
   startTime: string,
   text: string,
   endTime: string
@@ -37,18 +27,33 @@ const renderRegionContent = (
   const content = document.createElement("div");
 
   content.innerHTML = `
-    <div>
-      <div style="display: flex; justify-content: space-between; padding-left: 1rem; padding-right: 1rem; padding-top: 0.5rem;">
-        <em>${startTime}</em>
-        <em>${endTime}</em>
-      </div>
-      <div style="padding-left: 1rem; padding-right: 1rem; padding-bottom: 0.5rem; margin-top: 3rem;">
-        <span>${text}</span>
-      </div>
-    </div>;
+    <div style="display: flex; justify-content: space-between; flex-wrap:wrap; padding-left: 1rem; padding-right: 1rem;">
+      <em>${startTime}</em>
+      <em>${endTime}</em>
+    </div>
+    <div style="padding-left: 1rem; padding-right: 1rem;">
+      <span>${text}</span>
+    </div>
 `;
 
   return content;
+};
+
+const styleRegionContent = (region: Region) => {
+  // I have to do all these hakcy styling because the wavesurfer api doesn't allow custom styling regions
+
+  // This is the style for the parent div of the region
+  region.element.style.cssText +=
+    "display:flex; flex-direction:column; height:100%; justify-content:space-around;";
+
+  // This is the style of the child 'region-content' div:
+  const contentDiv = region.element.querySelector(
+    'div[part="region-content"]'
+  ) as HTMLDivElement;
+  if (contentDiv) {
+    contentDiv.style.cssText +=
+      "display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding-top: 0.5rem; padding-bottom: 1.5rem;";
+  }
 };
 
 interface WaveformVisualizerProps {
@@ -67,15 +72,18 @@ interface WaveformVisualizerProps {
   onDeleteSubtitle: (id: number) => void;
 }
 
-export default function WaveformVisualizer({
-  mediaFile,
-  currentTime,
-  isPlaying,
-  subtitles,
-  onSeek,
-  onPlayPause,
-  onUpdateSubtitleTiming,
-}: WaveformVisualizerProps) {
+export default forwardRef(function WaveformVisualizer(
+  {
+    mediaFile,
+    currentTime,
+    isPlaying,
+    subtitles,
+    onSeek,
+    onPlayPause,
+    onUpdateSubtitleTiming,
+  }: WaveformVisualizerProps,
+  ref: ForwardedRef<{ scrollToRegion: (id: number) => void }>
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mediaUrl, setMediaUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -86,7 +94,7 @@ export default function WaveformVisualizer({
    * */
   const { wavesurfer } = useWavesurfer({
     container: containerRef,
-    height: 100,
+    height: "auto",
     waveColor: "#A7F3D0",
     progressColor: "#00d4ff",
     cursorColor: "#b91c1c",
@@ -119,6 +127,25 @@ export default function WaveformVisualizer({
       [] // Keep the dependency array empty
     ),
   });
+
+  const scrollToRegion = useCallback(
+    (id: number) => {
+      if (!wavesurfer) return;
+      const region = subtitleToRegionMap.current.get(id);
+      if (region) {
+        const duration = wavesurfer.getDuration();
+        const containerWidth = containerRef.current?.clientWidth || 0;
+        const pixelsPerSecond = containerWidth / duration;
+        const scrollPosition =
+          region.start * pixelsPerSecond - containerWidth / 2;
+        wavesurfer.setScroll(Math.max(0, scrollPosition));
+        // Also seek to this position
+        wavesurfer.setTime(region.start);
+        onSeek(region.start);
+      }
+    },
+    [wavesurfer, onSeek]
+  );
 
   // Handle zoom level based on duration
   useEffect(() => {
@@ -263,7 +290,7 @@ export default function WaveformVisualizer({
       const start = timeToSeconds(subtitle.startTime);
       const end = timeToSeconds(subtitle.endTime);
 
-      const content = renderRegionContent(
+      const content = getContentHtml(
         subtitle.startTime,
         subtitle.text,
         subtitle.endTime
@@ -275,11 +302,13 @@ export default function WaveformVisualizer({
         start,
         end,
         content,
-        color: "#fb923c20",
+        color: "#fbbf2420",
         drag: true,
         resize: true,
         minLength: 0.1,
       });
+
+      styleRegionContent(region);
 
       // Save reference
       subtitleToRegionMap.current.set(subtitle.id, region);
@@ -305,7 +334,6 @@ export default function WaveformVisualizer({
     // Called whenever a region is dragged/resized
     const handleRegionUpdate = (region: Region) => {
       const subtitleId = Number.parseInt(region.id);
-      const contentEl = region.content as HTMLElement;
       let newStartTime = region.start;
       let newEndTime = region.end;
       let adjusted = false;
@@ -344,12 +372,14 @@ export default function WaveformVisualizer({
       const subtitle = subtitles.find((s) => s.id === subtitleId);
       if (subtitle) {
         region.setOptions({
-          content: renderRegionContent(
+          content: getContentHtml(
             newStartTimeFormatted,
             subtitle.text,
             newEndTimeFormatted
           ),
         });
+
+        styleRegionContent(region);
       }
 
       onUpdateSubtitleTiming(
@@ -394,18 +424,25 @@ export default function WaveformVisualizer({
       const region = subtitleToRegionMap.current.get(subtitle.id);
       if (region?.element) {
         region.setOptions({
-          content: renderRegionContent(
+          content: getContentHtml(
             subtitle.startTime,
             subtitle.text,
             subtitle.endTime
           ),
         });
+
+        styleRegionContent(region);
       }
     });
   }, [subtitles, wavesurfer]);
 
+  // Expose scrollToRegion method via ref
+  useImperativeHandle(ref, () => ({
+    scrollToRegion,
+  }));
+
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full border-t-2 border-black">
       <div
         ref={containerRef}
         className="w-full h-full bg-secondary rounded-lg"
@@ -419,4 +456,4 @@ export default function WaveformVisualizer({
       )}
     </div>
   );
-}
+});

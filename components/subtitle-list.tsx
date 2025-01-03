@@ -1,20 +1,22 @@
+import { Textarea } from "@/components/ui/textarea";
 import type { Subtitle } from "@/types/subtitle";
 import { Merge, Plus, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+
 interface SubtitleListProps {
   subtitles: Subtitle[];
   currentTime?: number;
+  onScrollToRegion: (id: number) => void;
   onUpdateSubtitle: (id: number, newText: string) => void;
   onMergeSubtitles: (id1: number, id2: number) => void;
   onAddSubtitle: (beforeId: number, afterId: number) => void;
   onDeleteSubtitle: (id: number) => void;
 }
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 
 export function SubtitleList({
   subtitles,
   currentTime = 0,
+  onScrollToRegion,
   onUpdateSubtitle,
   onMergeSubtitles,
   onAddSubtitle,
@@ -57,13 +59,14 @@ export function SubtitleList({
   }, [currentTime, subtitles]);
 
   return (
-    <div ref={listRef} className="h-[calc(100vh-20rem)] overflow-y-scroll p-4">
+    <div ref={listRef} className="h-full overflow-y-scroll p-4">
       {subtitles.map((subtitle, index) => (
         <div key={subtitle.id}>
           <div
             id={`subtitle-${subtitle.id}`}
             key={subtitle.id}
-            className={`p-4 border-b border-gray-300 hover:bg-secondary/50 cursor-pointer grid grid-cols-[2rem_6rem_1fr] gap-4 items-center ${
+            onClick={() => onScrollToRegion(subtitle.id)}
+            className={`p-4 border-b border-gray-400 hover:bg-secondary/50 cursor-pointer grid grid-cols-[2rem_6rem_1fr] gap-4 items-center ${
               timeToSeconds(subtitle.startTime) <= currentTime &&
               timeToSeconds(subtitle.endTime) >= currentTime
                 ? "bg-secondary"

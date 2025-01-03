@@ -1,9 +1,6 @@
 "use client";
 
 import { SubtitleList } from "@/components/subtitle-list";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,6 +11,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { VideoPlayer } from "@/components/video-player";
 import { parseSRT } from "@/lib/srtParser";
 import {
@@ -24,7 +24,7 @@ import {
 } from "@/lib/subtitleOperations";
 import type { Subtitle } from "@/types/subtitle";
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 const WaveformVisualizer = dynamic(
   () => import("@/components/waveform-visualizer"),
@@ -33,7 +33,12 @@ const WaveformVisualizer = dynamic(
   }
 );
 
+interface WaveformRef {
+  scrollToRegion: (id: number) => void;
+}
+
 export default function Home() {
+  const waveformRef = useRef<WaveformRef>(null);
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [srtFileName, setSrtFileName] = useState<string>("subtitles.srt");
   const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
@@ -94,7 +99,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="h-[6vh] border-b flex items-center px-4 justify-between">
+      <nav className="h-[6vh] border-black border-b-2 flex items-center px-12 justify-between">
         <h1 className="text-lg font-semibold">Subtitle Editor</h1>
         <div className="flex gap-4 items-center">
           <Label className="cursor-pointer">
@@ -144,12 +149,12 @@ export default function Home() {
             Download SRT
           </Button>
         </div>
-      </div>
+      </nav>
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col">
         {/* Top section - Split panels */}
-        <div className="flex h-[64vh]">
+        <div className="flex h-[70vh]">
           {/* Left panel - Subtitle list */}
           <div className="w-1/2">
             <div className="h-full">
@@ -157,6 +162,11 @@ export default function Home() {
                 <SubtitleList
                   subtitles={subtitles}
                   currentTime={playbackTime}
+                  onScrollToRegion={(id) => {
+                    if (waveformRef.current) {
+                      waveformRef.current.scrollToRegion(id);
+                    }
+                  }}
                   onUpdateSubtitle={(id: number, newText: string) => {
                     setSubtitles(updateSubtitle(subtitles, id, newText));
                   }}
@@ -205,8 +215,9 @@ export default function Home() {
         </div>
 
         {/* Bottom section - Waveform */}
-        <div className="h-[30vh] p-2">
+        <div className="h-[20vh] p-2">
           <WaveformVisualizer
+            ref={waveformRef}
             mediaFile={mediaFile}
             currentTime={playbackTime}
             isPlaying={isPlaying}
@@ -227,12 +238,18 @@ export default function Home() {
           />
         </div>
       </div>
-      <AlertDialog open={showOverwriteDialog} onOpenChange={setShowOverwriteDialog}>
+
+      {/* SRT ovverwrite alert dialog */}
+      <AlertDialog
+        open={showOverwriteDialog}
+        onOpenChange={setShowOverwriteDialog}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Replace existing subtitles?</AlertDialogTitle>
             <AlertDialogDescription>
-              There are unsaved subtitles. Loading a new SRT file will replace them. This action cannot be undone.
+              Loading a new SRT file will replace the current subtitles. Make
+              sure you have downloaded them before replacing it.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
