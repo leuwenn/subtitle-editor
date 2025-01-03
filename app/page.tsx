@@ -4,6 +4,16 @@ import { SubtitleList } from "@/components/subtitle-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { VideoPlayer } from "@/components/video-player";
 import { parseSRT } from "@/lib/srtParser";
 import {
@@ -26,6 +36,8 @@ const WaveformVisualizer = dynamic(
 export default function Home() {
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [srtFileName, setSrtFileName] = useState<string>("subtitles.srt");
+  const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
+  const [pendingSrtFile, setPendingSrtFile] = useState<File | null>(null);
 
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaFileName, setMediaFileName] = useState<string>("Load media file");
@@ -33,16 +45,46 @@ export default function Home() {
   const [playbackTime, setPlaybackTime] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
-  const handleFileUpload = async (
+  const handleFileUpload = async (file: File) => {
+    setSrtFileName(file.name);
+    const text = await file.text();
+    const parsedSubtitles = parseSRT(text);
+    setSubtitles(parsedSubtitles);
+  };
+
+  const handleSrtFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setSrtFileName(file.name);
-    const text = await file.text();
-    const parsedSubtitles = parseSRT(text);
-    setSubtitles(parsedSubtitles);
+    if (subtitles.length > 0) {
+      setPendingSrtFile(file);
+      setShowOverwriteDialog(true);
+    } else {
+      await handleFileUpload(file);
+    }
+  };
+
+  const downloadSRT = () => {
+    if (subtitles.length === 0) return;
+
+    const srtContent = subtitles
+      .sort((a, b) => a.id - b.id)
+      .map((subtitle) => {
+        return `${subtitle.id}\n${subtitle.startTime} --> ${subtitle.endTime}\n${subtitle.text}\n`;
+      })
+      .join("\n");
+
+    const blob = new Blob([srtContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = srtFileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   // Use useCallback to memoize onDeleteSubtitle
@@ -81,30 +123,24 @@ export default function Home() {
               {mediaFileName}
             </Button>
           </Label>
-          <Button
-            onClick={() => {
-              if (subtitles.length === 0) return;
-
-              const srtContent = subtitles
-                .sort((a, b) => a.id - b.id)
-                .map((subtitle) => {
-                  return `${subtitle.id}\n${subtitle.startTime} --> ${subtitle.endTime}\n${subtitle.text}\n`;
-                })
-                .join("\n");
-
-              const blob = new Blob([srtContent], { type: "text/plain" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = srtFileName;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
-            }}
-            disabled={subtitles.length === 0}
-            className="px-4 py-2 text-sm font-semibold"
-          >
+          <Label className="cursor-pointer">
+            <Input
+              type="file"
+              className="hidden"
+              accept=".srt"
+              onChange={handleSrtFileSelect}
+              id="srt-file-input"
+            />
+            <Button
+              variant="secondary"
+              onClick={() => {
+                document.getElementById("srt-file-input")?.click();
+              }}
+            >
+              Load SRT
+            </Button>
+          </Label>
+          <Button onClick={downloadSRT} disabled={subtitles.length === 0}>
             Download SRT
           </Button>
         </div>
@@ -142,7 +178,11 @@ export default function Home() {
                       type="file"
                       className="hidden"
                       accept=".srt"
-                      onChange={handleFileUpload}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        await handleFileUpload(file);
+                      }}
                     />
                   </Label>
                 </div>
@@ -187,6 +227,32 @@ export default function Home() {
           />
         </div>
       </div>
+      <AlertDialog open={showOverwriteDialog} onOpenChange={setShowOverwriteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replace existing subtitles?</AlertDialogTitle>
+            <AlertDialogDescription>
+              There are unsaved subtitles. Loading a new SRT file will replace them. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingSrtFile(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (pendingSrtFile) {
+                  await handleFileUpload(pendingSrtFile);
+                  setPendingSrtFile(null);
+                }
+                setShowOverwriteDialog(false);
+              }}
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
