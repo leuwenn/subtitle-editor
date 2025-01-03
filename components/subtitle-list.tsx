@@ -1,6 +1,6 @@
 import type { Subtitle } from "@/types/subtitle";
-import { useState, useRef, useEffect } from "react";
 import { Merge, Plus, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 interface SubtitleListProps {
   subtitles: Subtitle[];
   currentTime?: number;
@@ -9,6 +9,8 @@ interface SubtitleListProps {
   onAddSubtitle: (beforeId: number, afterId: number) => void;
   onDeleteSubtitle: (id: number) => void;
 }
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 export function SubtitleList({
   subtitles,
@@ -30,6 +32,7 @@ export function SubtitleList({
     return hours * 3600 + minutes * 60 + seconds;
   };
 
+  // Scroll to the current subtitle when user clicks a region in the waveform visualizer
   useEffect(() => {
     if (!listRef.current) return;
 
@@ -77,7 +80,7 @@ export function SubtitleList({
             <div className="flex justify-between items-start gap-4">
               <div className="flex-1">
                 {editingId === subtitle.id ? (
-                  <textarea
+                  <Textarea
                     ref={(textArea) => {
                       if (textArea) textArea.focus();
                     }}
@@ -87,11 +90,12 @@ export function SubtitleList({
                       onUpdateSubtitle(subtitle.id, editText);
                       setEditingId(null);
                     }}
-                    className="w-full p-1 border rounded focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    className="w-full p-2"
                   />
                 ) : (
                   <button
                     type="button"
+                    className="w-full text-left text-lg"
                     tabIndex={0}
                     onClick={() => {
                       setEditingId(subtitle.id);

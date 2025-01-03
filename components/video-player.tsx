@@ -1,10 +1,12 @@
 "use client";
 
+import { Label } from "./ui/label";
 import { useEffect, useState, useRef } from "react";
 import ReactPlayer from "react-player";
+import { Input } from "./ui/input";
 
 interface VideoPlayerProps {
-  mediaFile: File | null;
+  setMediaFile: (file: File | null) => void;
   onProgress: (time: number) => void;
   onPlayPause: (playing: boolean) => void;
   seekTime: number;
@@ -12,7 +14,7 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({
-  mediaFile,
+  setMediaFile,
   onProgress,
   onPlayPause,
   seekTime,
@@ -31,19 +33,23 @@ export function VideoPlayer({
     }
   }, [seekTime]);
 
-  useEffect(() => {
-    if (mediaFile) {
-      setMediaUrl(URL.createObjectURL(mediaFile));
-    }
-    // return () => {
-    //   if (mediaUrl) URL.revokeObjectURL(mediaUrl);
-    // };
-  }, [mediaFile]);
-
-  if (!mediaFile || !mediaUrl) {
+  if (!mediaUrl) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
-        Upload a video file to get started
+        <Label className="cursor-pointer text-xl hover:text-blue-500 underline">
+          Load a video / audio file
+          <Input
+            className="hidden"
+            type="file"
+            accept="audio/*,video/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setMediaFile(file);
+              setMediaUrl(URL.createObjectURL(file));
+            }}
+          />
+        </Label>
       </div>
     );
   }
