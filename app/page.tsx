@@ -1,17 +1,24 @@
 "use client";
 
-import { useState, useRef } from "react";
 import { SubtitleList } from "@/components/subtitle-list";
 import { VideoPlayer } from "@/components/video-player";
-import { WaveformVisualizer } from "@/components/waveform-visualizer";
 import { parseSRT } from "@/lib/srtParser";
-import type { Subtitle } from "@/types/subtitle";
 import {
-  updateSubtitle,
-  mergeSubtitles,
   addSubtitle,
   deleteSubtitle,
+  mergeSubtitles,
+  updateSubtitle,
 } from "@/lib/subtitleOperations";
+import type { Subtitle } from "@/types/subtitle";
+import dynamic from "next/dynamic";
+import { useRef, useState } from "react";
+
+const WaveformVisualizer = dynamic(
+  () => import("@/components/waveform-visualizer"),
+  {
+    ssr: false, // Disable server-side rendering
+  }
+);
 
 export default function Home() {
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);

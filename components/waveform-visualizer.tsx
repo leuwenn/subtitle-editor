@@ -46,7 +46,7 @@ interface WaveformVisualizerProps {
   onUpdateRegionContent: (id: number, content: string) => void;
 }
 
-export function WaveformVisualizer({
+export default function WaveformVisualizer({
   mediaFile,
   currentTime,
   isPlaying,
@@ -210,6 +210,21 @@ export function WaveformVisualizer({
 
   /****************************************************************
    * Handle subtitle region creation and updates
+   *
+   * There are 4 actions from the subtitle list that requires the waveform to re-render:
+   * 1. Update the subtitle text
+   * 2. Merge a subtitle
+   * 3. Add a new subtitle
+   * 4. Delete a subtitle
+   *
+   * For the first action, we only need to update the target region content.
+   * For the other 3 actions, we need to re-render the regions list.
+   *
+   * And there is only 1 action from the wavefrom regions that requires the subtitle list
+   * to re-render:
+   * 1. Update the subtitle timing by draging the region box
+   *
+   * And we only need to re-render the target region box.
    * */
 
   // Handle subtitle region creation and updates
@@ -306,22 +321,11 @@ export function WaveformVisualizer({
         wavesurfer.un("ready", updateRegions);
       };
     }
-  }, [
-    wavesurfer,
-    isPlaying,
-    subtitles,
-    onUpdateSubtitleTiming,
-    onUpdateSubtitleText,
-    onDeleteSubtitle,
-  ]);
+  }, [wavesurfer, isPlaying, subtitles, onUpdateSubtitleTiming]);
 
-  // Update region content when subtitle text is updated
+  // Update subtitle text requires only updating the target region content
   useEffect(() => {
     if (wavesurfer) {
-      const regionsPlugin = wavesurfer
-        .getActivePlugins()
-        .find((plugin) => plugin instanceof RegionsPlugin) as RegionsPlugin;
-
       subtitles.map((subtitle) => {
         const region = subtitleToRegionMap.current.get(subtitle.id);
         if (region) {
