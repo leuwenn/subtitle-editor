@@ -7,6 +7,7 @@ import { Input } from "./ui/input";
 
 interface VideoPlayerProps {
   setMediaFile: (file: File | null) => void;
+  setMediaFileName: (name: string) => void;
   onProgress: (time: number) => void;
   onPlayPause: (playing: boolean) => void;
   seekTime: number;
@@ -15,6 +16,7 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({
   setMediaFile,
+  setMediaFileName,
   onProgress,
   onPlayPause,
   seekTime,
@@ -47,6 +49,7 @@ export function VideoPlayer({
               if (!file) return;
               setMediaFile(file);
               setMediaUrl(URL.createObjectURL(file));
+              setMediaFileName(file.name);
             }}
           />
         </Label>

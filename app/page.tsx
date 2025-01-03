@@ -26,7 +26,10 @@ const WaveformVisualizer = dynamic(
 export default function Home() {
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [srtFileName, setSrtFileName] = useState<string>("subtitles.srt");
+
   const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaFileName, setMediaFileName] = useState<string>("Load media file");
+
   const [playbackTime, setPlaybackTime] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
@@ -52,6 +55,29 @@ export default function Home() {
       <div className="h-[6vh] border-b flex items-center px-4 justify-between">
         <h1 className="text-lg font-semibold">Subtitle Editor</h1>
         <div className="flex gap-4 items-center">
+          <Label className="cursor-pointer">
+            <Input
+              type="file"
+              className="hidden"
+              accept="audio/*,video/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setMediaFile(file);
+                setMediaFileName(file.name);
+              }}
+              id="media-file-input"
+            />
+            <Button
+              variant="secondary"
+              className=""
+              onClick={() => {
+                document.getElementById("media-file-input")?.click();
+              }}
+            >
+              {mediaFileName}
+            </Button>
+          </Label>
           <Button
             onClick={() => {
               if (subtitles.length === 0) return;
@@ -125,6 +151,7 @@ export default function Home() {
           <div className="w-1/2 p-4">
             <VideoPlayer
               setMediaFile={setMediaFile}
+              setMediaFileName={setMediaFileName}
               onProgress={(time) => setPlaybackTime(time)}
               onPlayPause={(playing) => setIsPlaying(playing)}
               seekTime={playbackTime}
