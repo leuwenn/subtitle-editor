@@ -6,6 +6,7 @@ import ReactPlayer from "react-player";
 import { Input } from "./ui/input";
 
 interface VideoPlayerProps {
+  mediaFile: File | null;
   setMediaFile: (file: File | null) => void;
   setMediaFileName: (name: string) => void;
   onProgress: (time: number) => void;
@@ -15,6 +16,7 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({
+  mediaFile,
   setMediaFile,
   setMediaFileName,
   onProgress,
@@ -34,6 +36,14 @@ export function VideoPlayer({
       }
     }
   }, [seekTime]);
+
+  useEffect(() => {
+    if (mediaFile) {
+      setMediaUrl(URL.createObjectURL(mediaFile));
+    } else {
+      setMediaUrl("");
+    }
+  }, [mediaFile]);
 
   if (!mediaUrl) {
     return (

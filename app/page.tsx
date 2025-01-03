@@ -63,8 +63,11 @@ export default function Home() {
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                setMediaFile(file);
-                setMediaFileName(file.name);
+                setMediaFile(null); // Reset first to trigger a re-render
+                setTimeout(() => {
+                  setMediaFile(file);
+                  setMediaFileName(file.name);
+                }, 0);
               }}
               id="media-file-input"
             />
@@ -150,6 +153,7 @@ export default function Home() {
           {/* Right panel - Media player */}
           <div className="w-1/2 p-4">
             <VideoPlayer
+              mediaFile={mediaFile}
               setMediaFile={setMediaFile}
               setMediaFileName={setMediaFileName}
               onProgress={(time) => setPlaybackTime(time)}
