@@ -69,7 +69,7 @@ export function VideoPlayer({
 
   if (!mediaUrl) {
     return (
-      <div className="flex items-center justify-center h-full text-muted-foreground">
+      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
         <Label className="cursor-pointer text-xl hover:text-blue-500 underline">
           Load a local video / audio file
           <Input
@@ -85,6 +85,11 @@ export function VideoPlayer({
             }}
           />
         </Label>
+        <p className="my-4 text-lg">
+          Supported formats: <code>m4a</code>, <code>mp3</code>,{" "}
+          <code>mp4</code>, <code>wav</code>, <code>aac</code>, <code>wma</code>
+          , <code>flac</code>, <code>opus</code>, <code>ogg</code>
+        </p>
       </div>
     );
   }

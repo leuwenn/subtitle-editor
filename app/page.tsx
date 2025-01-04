@@ -24,7 +24,7 @@ import {
 } from "@/lib/subtitleOperations";
 import type { Subtitle } from "@/types/subtitle";
 import dynamic from "next/dynamic";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const WaveformVisualizer = dynamic(
   () => import("@/components/waveform-visualizer"),
@@ -96,6 +96,22 @@ export default function Home() {
   const onDeleteSubtitle = useCallback((id: number) => {
     setSubtitles((prevSubtitles) => deleteSubtitle(prevSubtitles, id));
   }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (subtitles.length > 0) {
+        event.preventDefault();
+        // Setting returnValue is required for most modern browsers
+        event.returnValue = "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [subtitles]);
 
   return (
     <div className="flex flex-col h-screen">
@@ -206,7 +222,7 @@ export default function Home() {
                         {
                           id: 1,
                           startTime: "00:00:00,000",
-                          endTime: "00:00:05,000",
+                          endTime: "00:00:03,000",
                           text: "New subtitle",
                         },
                       ])
@@ -270,7 +286,7 @@ export default function Home() {
             <AlertDialogTitle>Replace existing subtitles?</AlertDialogTitle>
             <AlertDialogDescription>
               Loading a new SRT file will replace the current subtitles. Make
-              sure you have downloaded them before replacing it.
+              sure you have downloaded the current SRT first.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -278,6 +294,7 @@ export default function Home() {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
+              className="bg-red-600 hover:bg-red-500"
               onClick={async () => {
                 if (pendingSrtFile) {
                   await handleFileUpload(pendingSrtFile);
@@ -286,7 +303,7 @@ export default function Home() {
                 setShowOverwriteDialog(false);
               }}
             >
-              Continue
+              Yes
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
