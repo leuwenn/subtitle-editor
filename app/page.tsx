@@ -253,26 +253,44 @@ export default function Home() {
 
         {/* Bottom section - Waveform */}
         <div className="h-[20vh]">
-          <WaveformVisualizer
-            ref={waveformRef}
-            mediaFile={mediaFile}
-            currentTime={playbackTime}
-            isPlaying={isPlaying}
-            subtitles={subtitles}
-            onSeek={setPlaybackTime}
-            onPlayPause={setIsPlaying}
-            onUpdateSubtitleTiming={(id, startTime, endTime) => {
-              setSubtitles((subs) =>
-                subs.map((sub) =>
-                  sub.id === id ? { ...sub, startTime, endTime } : sub
-                )
-              );
-            }}
-            onUpdateSubtitleText={(id: number, newText: string) => {
-              setSubtitles(updateSubtitle(subtitles, id, newText));
-            }}
-            onDeleteSubtitle={onDeleteSubtitle}
-          />
+          {mediaFile ? (
+            <WaveformVisualizer
+              ref={waveformRef}
+              mediaFile={mediaFile}
+              currentTime={playbackTime}
+              isPlaying={isPlaying}
+              subtitles={subtitles}
+              onSeek={setPlaybackTime}
+              onPlayPause={setIsPlaying}
+              onUpdateSubtitleTiming={(id, startTime, endTime) => {
+                setSubtitles((subs) =>
+                  subs.map((sub) =>
+                    sub.id === id ? { ...sub, startTime, endTime } : sub
+                  )
+                );
+              }}
+              onUpdateSubtitleText={(id: number, newText: string) => {
+                setSubtitles(updateSubtitle(subtitles, id, newText));
+              }}
+              onDeleteSubtitle={onDeleteSubtitle}
+            />
+          ) : (
+            <div className="text-lg  h-full text-gray-600 px-8 py-4 border-t-2 border-black">
+              <p>After loading the media and subtitles:</p>
+              <ul className="list-disc list-inside">
+                <li>Click the subtitle text to enter edit mode.</li>
+                <li>Use the icons to add, merge or delete subtitles.</li>
+                <li>
+                  Drag the dashed borders on the waveform to change the
+                  subtitles' timestamps.
+                </li>
+                <li>
+                  Remember to click "Save SRT" to save the subtitles after you
+                  finish editing!
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
