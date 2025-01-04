@@ -66,7 +66,8 @@ export function SubtitleList({
             id={`subtitle-${subtitle.id}`}
             key={subtitle.id}
             onClick={() => onScrollToRegion(subtitle.id)}
-            className={`p-4 border-b border-gray-400 hover:bg-secondary/50 cursor-pointer grid grid-cols-[2rem_6rem_1fr] gap-4 items-center ${
+            onKeyDown={() => {}}
+            className={`p-4 border-b border-gray-500 hover:bg-secondary/50 cursor-pointer grid grid-cols-[2rem_6rem_1fr] gap-4 items-center ${
               timeToSeconds(subtitle.startTime) <= currentTime &&
               timeToSeconds(subtitle.endTime) >= currentTime
                 ? "bg-secondary"

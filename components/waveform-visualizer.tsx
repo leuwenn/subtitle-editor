@@ -102,7 +102,7 @@ export default forwardRef(function WaveformVisualizer(
     minPxPerSec: 100, // Lower default minimum pixels per second
     fillParent: true, // Start with fill parent true
     autoCenter: true, // Enable auto center initially
-    backend: "WebAudio",
+    backend: "MediaElement",
     normalize: true,
     interact: true,
     hideScrollbar: false, // We'll handle scrolling manually
@@ -128,6 +128,18 @@ export default forwardRef(function WaveformVisualizer(
     ),
   });
 
+  // Load media file into wavesurfer
+  useEffect(() => {
+    if (mediaFile) {
+      setIsLoading(true);
+      setMediaUrl(URL.createObjectURL(mediaFile));
+    }
+  }, [mediaFile]);
+
+  /****************************************************************
+   * Scrolling and zooming the waveform
+   */
+
   const scrollToRegion = useCallback(
     (id: number) => {
       if (!wavesurfer) return;
@@ -146,6 +158,11 @@ export default forwardRef(function WaveformVisualizer(
     },
     [wavesurfer, onSeek]
   );
+
+  // Expose scrollToRegion method via ref
+  useImperativeHandle(ref, () => ({
+    scrollToRegion,
+  }));
 
   // Handle zoom level based on duration
   useEffect(() => {
@@ -196,14 +213,6 @@ export default forwardRef(function WaveformVisualizer(
       };
     }
   }, [wavesurfer]);
-
-  // Load media file into wavesurfer
-  useEffect(() => {
-    if (mediaFile) {
-      setIsLoading(true);
-      setMediaUrl(URL.createObjectURL(mediaFile));
-    }
-  }, [mediaFile]);
 
   /****************************************************************
    *  Sync the wavesurfer progress with the right panel media player
@@ -316,6 +325,7 @@ export default forwardRef(function WaveformVisualizer(
   }, [wavesurfer, subtitles]);
 
   // Handle Wavesurfer events
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     if (!wavesurfer) return;
 
@@ -323,12 +333,24 @@ export default forwardRef(function WaveformVisualizer(
       setIsLoading(false);
       // Build regions once initially
       updateRegions();
+      wavesurfer.setMuted(true);
       // If you want to auto-play after load:
       if (isPlaying) {
         wavesurfer.play();
       } else {
         wavesurfer.pause();
       }
+    };
+
+    // If the user clicks "play" on the waveform, ensure it's muted and sync with parent
+    const handlePlay = () => {
+      wavesurfer.setMuted(true);
+      onPlayPause(true);
+    };
+
+    // If the user clicks "pause" on the waveform, sync with parent
+    const handlePause = () => {
+      onPlayPause(false);
     };
 
     // Called whenever a region is dragged/resized
@@ -403,17 +425,18 @@ export default forwardRef(function WaveformVisualizer(
     return () => {
       // Cleanup
       wavesurfer.un("ready", handleReady);
+      wavesurfer.on("play", handlePlay);
+      wavesurfer.on("pause", handlePause);
       if (regionsPlugin) {
         regionsPlugin.un("region-updated", handleRegionUpdate);
       }
     };
   }, [wavesurfer, isPlaying, subtitles, onUpdateSubtitleTiming, updateRegions]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     if (!wavesurfer) return;
-    // Optionally check if (wavesurfer.isReady) here,
-    // but usually if subtitles change after "ready,"
-    // you can just call updateRegions().
+    // When subtitles change, update the regions
     updateRegions();
   }, [wavesurfer, subtitles, updateRegions]);
 
@@ -435,11 +458,6 @@ export default forwardRef(function WaveformVisualizer(
       }
     });
   }, [subtitles, wavesurfer]);
-
-  // Expose scrollToRegion method via ref
-  useImperativeHandle(ref, () => ({
-    scrollToRegion,
-  }));
 
   return (
     <div className="relative w-full h-full border-t-2 border-black">

@@ -1,12 +1,15 @@
 "use client";
 
-import { Label } from "./ui/label";
-import { useEffect, useState, useRef } from "react";
+import { srtToVtt, subtitlesToSrtString } from "@/lib/utils";
+import type { Subtitle } from "@/types/subtitle";
+import { useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 interface VideoPlayerProps {
   mediaFile: File | null;
+  subtitles: Subtitle[];
   setMediaFile: (file: File | null) => void;
   setMediaFileName: (name: string) => void;
   onProgress: (time: number) => void;
@@ -17,6 +20,7 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({
   mediaFile,
+  subtitles,
   setMediaFile,
   setMediaFileName,
   onProgress,
@@ -25,6 +29,7 @@ export function VideoPlayer({
   isPlaying,
 }: VideoPlayerProps) {
   const [mediaUrl, setMediaUrl] = useState<string>("");
+  const [vttUrl, setVttUrl] = useState("");
   const playerRef = useRef<ReactPlayer>(null);
 
   useEffect(() => {
@@ -44,6 +49,23 @@ export function VideoPlayer({
       setMediaUrl("");
     }
   }, [mediaFile]);
+
+  useEffect(() => {
+    // Generate or “export” your current subtitles as an SRT string
+    const srtString = subtitlesToSrtString(subtitles);
+    // Convert SRT → WebVTT
+    const vttString = srtToVtt(srtString);
+
+    // Create a Blob
+    const blob = new Blob([vttString], { type: "text/vtt" });
+    const url = URL.createObjectURL(blob);
+    setVttUrl(url);
+
+    return () => {
+      // cleanup
+      URL.revokeObjectURL(url);
+    };
+  }, [subtitles]);
 
   if (!mediaUrl) {
     return (
@@ -87,10 +109,20 @@ export function VideoPlayer({
         playing={isPlaying}
         config={{
           file: {
+            forceVideo: true,
             attributes: {
               controlsList: "nodownload",
               playsInline: true,
             },
+            tracks: [
+              {
+                label: "Subtitles",
+                kind: "subtitles",
+                src: vttUrl, // ← pass the in-memory URL to the track
+                srcLang: "unknown",
+                default: true,
+              },
+            ],
           },
         }}
       />

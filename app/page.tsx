@@ -204,6 +204,7 @@ export default function Home() {
           <div className="w-1/2 p-4">
             <VideoPlayer
               mediaFile={mediaFile}
+              subtitles={subtitles}
               setMediaFile={setMediaFile}
               setMediaFileName={setMediaFileName}
               onProgress={(time) => setPlaybackTime(time)}
