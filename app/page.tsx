@@ -123,6 +123,7 @@ export default function Home() {
               onClick={() => {
                 document.getElementById("media-file-input")?.click();
               }}
+              className="bg-cyan-300 hover:bg-cyan-500 hover:text-white text-black"
             >
               <span className="max-w-36 flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-left">
                 {mediaFileName}
@@ -142,12 +143,13 @@ export default function Home() {
               onClick={() => {
                 document.getElementById("srt-file-input")?.click();
               }}
+              className="hover:bg-amber-500 hover:text-white bg-amber-300 text-black"
             >
               Load SRT
             </Button>
           </Label>
           <Button onClick={downloadSRT} disabled={subtitles.length === 0}>
-            Download SRT
+            Save SRT
           </Button>
         </div>
       </nav>
@@ -202,7 +204,7 @@ export default function Home() {
           </div>
 
           {/* Right panel - Media player */}
-          <div className="w-1/2">
+          <div className="w-1/2 border-l-2 border-black">
             <VideoPlayer
               mediaFile={mediaFile}
               subtitles={subtitles}

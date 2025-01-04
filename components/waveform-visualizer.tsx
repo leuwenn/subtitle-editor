@@ -106,52 +106,56 @@ export default forwardRef(function WaveformVisualizer(
   const [isLoading, setIsLoading] = useState(false);
   const subtitleToRegionMap = useRef<Map<number, Region>>(new Map());
 
-  /****************************************************************
-   *  Initialize the wavesurfer with options and plugins
-   * */
-  const { wavesurfer } = useWavesurfer({
-    container: containerRef,
-    height: "auto",
-    waveColor: "#A7F3D0",
-    progressColor: "#00d4ff",
-    cursorColor: "#b91c1c",
-    url: mediaUrl,
-    minPxPerSec: 100, // Lower default minimum pixels per second
-    fillParent: true, // Start with fill parent true
-    autoCenter: true, // Enable auto center initially
-    backend: "MediaElement",
-    normalize: true,
-    interact: true,
-    hideScrollbar: false, // We'll handle scrolling manually
-    plugins: useMemo(
-      () => [
-        Timeline.create({
-          timeInterval: 0.1,
-          primaryLabelInterval: 1,
-          style: {
-            fontSize: "12px",
-          },
-        }),
-        Hover.create({
-          lineColor: "#ff0000",
-          lineWidth: 1,
-          labelBackground: "#555",
-          labelColor: "#fff",
-          labelSize: "12px",
-        }),
-        RegionsPlugin.create(),
-      ],
-      [] // Keep the dependency array empty
-    ),
-  });
-
   // Load media file into wavesurfer
   useEffect(() => {
     if (mediaFile) {
       setIsLoading(true);
       setMediaUrl(URL.createObjectURL(mediaFile));
+    } else {
+      setMediaUrl("");
     }
   }, [mediaFile]);
+
+  /****************************************************************
+   *  Initialize the wavesurfer with options and plugins
+   * */
+  const { wavesurfer } = useWavesurfer(
+    useMemo(
+      () => ({
+        container: containerRef,
+        height: "auto",
+        waveColor: "#A7F3D0",
+        progressColor: "#00d4ff",
+        cursorColor: "#b91c1c",
+        url: mediaUrl,
+        minPxPerSec: 100, // Lower default minimum pixels per second
+        fillParent: true, // Start with fill parent true
+        autoCenter: true, // Enable auto center initially
+        backend: "MediaElement",
+        normalize: true,
+        interact: true,
+        hideScrollbar: false, // We'll handle scrolling manually
+        plugins: [
+          Timeline.create({
+            timeInterval: 0.1,
+            primaryLabelInterval: 1,
+            style: {
+              fontSize: "12px",
+            },
+          }),
+          Hover.create({
+            lineColor: "#ff0000",
+            lineWidth: 1,
+            labelBackground: "#555",
+            labelColor: "#fff",
+            labelSize: "12px",
+          }),
+          RegionsPlugin.create(),
+        ],
+      }),
+      [mediaUrl]
+    )
+  );
 
   /****************************************************************
    * Scrolling and zooming the waveform
@@ -478,15 +482,35 @@ export default forwardRef(function WaveformVisualizer(
 
   return (
     <div className="relative w-full h-full border-t-2 border-black">
-      <div
-        ref={containerRef}
-        className="w-full h-full bg-secondary rounded-lg"
-        role="button"
-        tabIndex={0}
-      />
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-secondary/50">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      {mediaUrl ? (
+        <>
+          <div
+            ref={containerRef}
+            className="w-full h-full bg-secondary rounded-lg"
+            role="button"
+            tabIndex={0}
+          />
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-secondary/50">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="text-lg  h-full text-gray-600 mx-8 my-4">
+          <p>After loading the media and subtitles:</p>
+          <ul className="list-disc list-inside">
+            <li>Click the subtitle text to enter edit mode.</li>
+            <li>Use the icons to add, merge or delete subtitles.</li>
+            <li>
+              Drag the dashed borders on the waveform to change the subtitles'
+              timestamps.
+            </li>
+            <li>
+              Remember to click "Save SRT" to save the subtitles after you
+              finish editing!
+            </li>
+          </ul>
         </div>
       )}
     </div>
