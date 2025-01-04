@@ -19,6 +19,9 @@ import RegionsPlugin, {
 } from "wavesurfer.js/dist/plugins/regions.esm.js";
 import Timeline from "wavesurfer.js/dist/plugins/timeline.esm.js";
 
+const HANDLE_COLOR = "#f59e0b";
+const REGION_COLOR = "#fcd34d40";
+
 const getContentHtml = (
   startTime: string,
   text: string,
@@ -53,6 +56,20 @@ const styleRegionContent = (region: Region) => {
   if (contentDiv) {
     contentDiv.style.cssText +=
       "display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding-top: 0.5rem; padding-bottom: 1.5rem;";
+  }
+
+  const leftHandleDiv = region.element.querySelector(
+    'div[part="region-handle region-handle-left"]'
+  ) as HTMLDivElement;
+  if (leftHandleDiv) {
+    leftHandleDiv.style.cssText += `border-left: 2px dashed ${HANDLE_COLOR};`;
+  }
+
+  const rightHandleDiv = region.element.querySelector(
+    'div[part="region-handle region-handle-right"]'
+  ) as HTMLDivElement;
+  if (rightHandleDiv) {
+    rightHandleDiv.style.cssText += `border-right: 2px dashed ${HANDLE_COLOR};`;
   }
 };
 
@@ -311,7 +328,7 @@ export default forwardRef(function WaveformVisualizer(
         start,
         end,
         content,
-        color: "#fbbf2420",
+        color: REGION_COLOR,
         drag: true,
         resize: true,
         minLength: 0.1,

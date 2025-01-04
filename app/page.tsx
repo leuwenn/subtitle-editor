@@ -120,12 +120,13 @@ export default function Home() {
             />
             <Button
               variant="secondary"
-              className=""
               onClick={() => {
                 document.getElementById("media-file-input")?.click();
               }}
             >
-              {mediaFileName}
+              <span className="max-w-36 flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-left">
+                {mediaFileName}
+              </span>
             </Button>
           </Label>
           <Label className="cursor-pointer">
@@ -201,7 +202,7 @@ export default function Home() {
           </div>
 
           {/* Right panel - Media player */}
-          <div className="w-1/2 p-4">
+          <div className="w-1/2">
             <VideoPlayer
               mediaFile={mediaFile}
               subtitles={subtitles}
@@ -216,7 +217,7 @@ export default function Home() {
         </div>
 
         {/* Bottom section - Waveform */}
-        <div className="h-[20vh] p-2">
+        <div className="h-[20vh]">
           <WaveformVisualizer
             ref={waveformRef}
             mediaFile={mediaFile}

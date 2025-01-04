@@ -90,7 +90,7 @@ export function VideoPlayer({
   }
 
   return (
-    <div className="w-full h-full flex items-center justify-center bg-black rounded-lg overflow-hidden">
+    <div className="w-full h-full flex items-center justify-center bg-black overflow-hidden">
       <ReactPlayer
         ref={playerRef}
         url={mediaUrl}
