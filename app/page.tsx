@@ -45,7 +45,7 @@ export default function Home() {
   const [pendingSrtFile, setPendingSrtFile] = useState<File | null>(null);
 
   const [mediaFile, setMediaFile] = useState<File | null>(null);
-  const [mediaFileName, setMediaFileName] = useState<string>("Load media file");
+  const [mediaFileName, setMediaFileName] = useState<string>("Load media");
 
   const [playbackTime, setPlaybackTime] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -176,7 +176,7 @@ export default function Home() {
                   onMergeSubtitles={(id1: number, id2: number) => {
                     setSubtitles(mergeSubtitles(subtitles, id1, id2));
                   }}
-                  onAddSubtitle={(beforeId: number, afterId: number) => {
+                  onAddSubtitle={(beforeId: number, afterId: number | null) => {
                     setSubtitles(addSubtitle(subtitles, beforeId, afterId));
                   }}
                   onDeleteSubtitle={(id: number) => {
@@ -184,7 +184,7 @@ export default function Home() {
                   }}
                 />
               ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <Label className="cursor-pointer text-xl hover:text-blue-500 underline">
                     Upload an SRT file
                     <Input
@@ -198,6 +198,23 @@ export default function Home() {
                       }}
                     />
                   </Label>
+                  <p className="text-xl my-4">Or</p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSubtitles([
+                        {
+                          id: 1,
+                          startTime: "00:00:00,000",
+                          endTime: "00:00:05,000",
+                          text: "New subtitle",
+                        },
+                      ])
+                    }
+                    className="cursor-pointer text-xl text-muted-foreground underline hover:text-blue-500"
+                  >
+                    Start from sratch
+                  </button>
                 </div>
               )}
             </div>

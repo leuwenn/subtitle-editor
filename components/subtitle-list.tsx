@@ -15,7 +15,7 @@ interface SubtitleListProps {
   onScrollToRegion: (id: number) => void;
   onUpdateSubtitle: (id: number, newText: string) => void;
   onMergeSubtitles: (id1: number, id2: number) => void;
-  onAddSubtitle: (beforeId: number, afterId: number) => void;
+  onAddSubtitle: (beforeId: number, afterId: number | null) => void;
   onDeleteSubtitle: (id: number) => void;
 }
 
@@ -136,8 +136,9 @@ export function SubtitleList({
                 </Tooltip>
               </div>
             </div>
-            {index < subtitles.length - 1 && (
-              <div className="flex justify-center gap-12 -mt-3 -mb-3">
+            {/* */}
+            <div className="flex justify-center gap-12 -mt-3 -mb-3">
+              {index < subtitles.length - 1 && (
                 <Tooltip>
                   <TooltipTrigger
                     type="button"
@@ -152,20 +153,25 @@ export function SubtitleList({
                     Merge
                   </TooltipContent>
                 </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger
-                    type="button"
-                    onClick={() =>
-                      onAddSubtitle(subtitle.id, subtitles[index + 1].id)
-                    }
-                    className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded"
-                  >
-                    <Plus size={12} />
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-green-500">Add</TooltipContent>
-                </Tooltip>
-              </div>
-            )}
+              )}
+
+              <Tooltip>
+                <TooltipTrigger
+                  type="button"
+                  onClick={() =>
+                    onAddSubtitle(
+                      subtitle.id,
+                      index < subtitles.length - 1 ? subtitles[index + 1].id : null
+                    )
+                  }
+                  className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded"
+                >
+                  <Plus size={12} />
+                </TooltipTrigger>
+                <TooltipContent className="bg-green-500">Add</TooltipContent>
+              </Tooltip>
+            </div>
+            {/* )} */}
           </div>
         ))}
       </TooltipProvider>

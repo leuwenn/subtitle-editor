@@ -1,5 +1,7 @@
 import type { Subtitle } from "@/types/subtitle";
 
+const DEFAULT_SUBTITLE_DURATION = 3; // seconds
+
 export const reorderSubtitleIds = (subtitles: Subtitle[]): Subtitle[] => {
   let nextId = 1;
   return subtitles.map((subtitle) => {
@@ -53,25 +55,54 @@ export const deleteSubtitle = (
 export const addSubtitle = (
   subtitles: Subtitle[],
   beforeId: number,
-  afterId: number
+  afterId: number | null
 ): Subtitle[] => {
   const beforeSub = subtitles.find((s) => s.id === beforeId);
-  const afterSub = subtitles.find((s) => s.id === afterId);
-  if (!beforeSub || !afterSub) return subtitles;
+  if (!beforeSub) return subtitles;
 
-  const newSubtitle: Subtitle = {
-    id: afterId,
-    startTime: beforeSub.endTime,
-    endTime: afterSub.startTime,
-    text: "New subtitle",
-  };
+  let newSubtitle: Subtitle;
+  if (afterId === null) {
+    // Adding at the end
+    const endTimeSeconds =
+      timeStringToSeconds(beforeSub.endTime) + DEFAULT_SUBTITLE_DURATION;
+    newSubtitle = {
+      id: beforeSub.id + 1,
+      startTime: beforeSub.endTime,
+      endTime: secondsToTimeString(endTimeSeconds),
+      text: "New subtitle",
+    };
+  } else {
+    // Adding in between
+    const afterSub = subtitles.find((s) => s.id === afterId);
+    if (!afterSub) return subtitles;
+    newSubtitle = {
+      id: beforeSub.id + 1,
+      startTime: beforeSub.endTime,
+      endTime: afterSub.startTime,
+      text: "New subtitle",
+    };
+  }
 
-  const index = subtitles.findIndex((s) => s.id === afterId);
+  const index = subtitles.findIndex((s) => s.id === beforeId);
   const updatedSubtitles = [
-    ...subtitles.slice(0, index),
+    ...subtitles.slice(0, index + 1),
     newSubtitle,
-    ...subtitles.slice(index),
+    ...subtitles.slice(index + 1),
   ];
 
   return reorderSubtitleIds(updatedSubtitles);
+};
+
+// Helper functions to convert between time string and seconds
+const timeStringToSeconds = (timeString: string): number => {
+  const [hours, minutes, seconds] = timeString
+    .split(":")
+    .map((part) => Number.parseFloat(part.replace(",", ".")));
+  return hours * 3600 + minutes * 60 + seconds;
+};
+
+const secondsToTimeString = (seconds: number): string => {
+  const date = new Date(0);
+  date.setSeconds(seconds);
+  return date.toISOString().substr(11, 12).replace(".", ",");
 };

@@ -71,7 +71,7 @@ export function VideoPlayer({
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
         <Label className="cursor-pointer text-xl hover:text-blue-500 underline">
-          Load a video / audio file
+          Load a local video / audio file
           <Input
             className="hidden"
             type="file"
