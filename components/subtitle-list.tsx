@@ -1,6 +1,6 @@
 import { Textarea } from "@/components/ui/textarea";
 import type { Subtitle } from "@/types/subtitle";
-import { Merge, Plus, Trash2 } from "lucide-react";
+import { IconFold, IconTrash, IconPlus } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import {
   Tooltip,
@@ -130,13 +130,12 @@ export function SubtitleList({
                     onClick={() => onDeleteSubtitle(subtitle.id)}
                     className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded"
                   >
-                    <Trash2 size={12} />
+                    <IconTrash size={12} />
                   </TooltipTrigger>
                   <TooltipContent className="bg-red-600">Delete</TooltipContent>
                 </Tooltip>
               </div>
             </div>
-            {/* */}
             <div className="flex justify-center gap-12 -mt-3 -mb-3">
               {index < subtitles.length - 1 && (
                 <Tooltip>
@@ -147,7 +146,7 @@ export function SubtitleList({
                     }
                     className="px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded"
                   >
-                    <Merge size={12} />
+                    <IconFold size={12} />
                   </TooltipTrigger>
                   <TooltipContent className="bg-yellow-500">
                     Merge
@@ -161,17 +160,18 @@ export function SubtitleList({
                   onClick={() =>
                     onAddSubtitle(
                       subtitle.id,
-                      index < subtitles.length - 1 ? subtitles[index + 1].id : null
+                      index < subtitles.length - 1
+                        ? subtitles[index + 1].id
+                        : null
                     )
                   }
                   className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded"
                 >
-                  <Plus size={12} />
+                  <IconPlus size={12} />
                 </TooltipTrigger>
                 <TooltipContent className="bg-green-500">Add</TooltipContent>
               </Tooltip>
             </div>
-            {/* )} */}
           </div>
         ))}
       </TooltipProvider>

@@ -23,8 +23,15 @@ import {
   updateSubtitle,
 } from "@/lib/subtitleOperations";
 import type { Subtitle } from "@/types/subtitle";
+import {
+  DownloadIcon,
+  QuestionMarkCircledIcon,
+  VideoIcon,
+} from "@radix-ui/react-icons";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { IconBadgeCc } from "@tabler/icons-react";
 
 const WaveformVisualizer = dynamic(
   () => import("@/components/waveform-visualizer"),
@@ -118,6 +125,11 @@ export default function Home() {
       <nav className="h-[6vh] border-black border-b-2 flex items-center px-12 justify-between">
         <h1 className="text-lg font-semibold">Subtitle Editor</h1>
         <div className="flex gap-4 items-center">
+          <Link href="/faq" target="_blank">
+            <Button variant="ghost">
+              <QuestionMarkCircledIcon />
+            </Button>
+          </Link>
           <Label className="cursor-pointer">
             <Input
               type="file"
@@ -141,6 +153,7 @@ export default function Home() {
               }}
               className="bg-cyan-300 hover:bg-cyan-500 hover:text-white text-black"
             >
+              <VideoIcon />
               <span className="max-w-36 flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-left">
                 {mediaFileName}
               </span>
@@ -161,10 +174,12 @@ export default function Home() {
               }}
               className="hover:bg-amber-500 hover:text-white bg-amber-300 text-black"
             >
+              <IconBadgeCc />
               Load SRT
             </Button>
           </Label>
           <Button onClick={downloadSRT} disabled={subtitles.length === 0}>
+            <DownloadIcon />
             Save SRT
           </Button>
         </div>

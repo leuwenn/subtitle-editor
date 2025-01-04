@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Subtitle Editor",
-  description: "A web-based subtitle editor",
+  description:
+    "Fully-web srt editor, open-sourced, no account registration required.",
 };
 
 export default function RootLayout({
