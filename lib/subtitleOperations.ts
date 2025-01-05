@@ -109,3 +109,62 @@ export const addSubtitle = (
 
   return reorderSubtitleIds(updatedSubtitles);
 };
+
+/**
+ * Split one subtitle into two, based on caret position in the text.
+ *
+ * The ratio of times is caretPos / textLength.
+ * Example:
+ *  text = "abcde" (length=5)
+ *  caret between c and d => caretPos=3
+ *  ratio=3/5=0.6
+ *  -> The new endTime of the first subtitle = oldStart + 0.6*(oldEnd - oldStart).
+ *  -> The second subtitle starts at that same timestamp.
+ */
+export function splitSubtitle(
+  subtitles: Subtitle[],
+  id: number,
+  caretPos: number,
+  textLength: number
+): Subtitle[] {
+  // Find the subtitle to split
+  const sub = subtitles.find((s) => s.id === id);
+  if (!sub) return subtitles; // if not found, do nothing
+
+  // Avoid splitting at start/end (caret=0 or caret=textLength) if you want
+  if (caretPos <= 0 || caretPos >= textLength) {
+    // No real split
+    return subtitles;
+  }
+
+  const oldStartSec = timeToSeconds(sub.startTime);
+  const oldEndSec = timeToSeconds(sub.endTime);
+  const totalSec = oldEndSec - oldStartSec;
+
+  // The fraction of time based on the caret ratio
+  const ratio = caretPos / textLength;
+  const splitSec = oldStartSec + ratio * totalSec;
+
+  // Create first half
+  const first: Subtitle = {
+    ...sub,
+    endTime: secondsToTime(splitSec),
+    text: sub.text.slice(0, caretPos),
+  };
+
+  // Create second half
+  const second: Subtitle = {
+    ...sub,
+    id: sub.id + 1, // we'll reorder IDs anyway
+    startTime: secondsToTime(splitSec),
+    text: sub.text.slice(caretPos),
+  };
+
+  // Remove original and insert the two halves at the same position
+  const index = subtitles.findIndex((s) => s.id === id);
+  const updated = [...subtitles];
+  updated.splice(index, 1, first, second);
+
+  // Reorder IDs to keep them consecutive
+  return reorderSubtitleIds(updated);
+}

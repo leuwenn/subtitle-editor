@@ -20,6 +20,7 @@ import {
   addSubtitle,
   deleteSubtitle,
   mergeSubtitles,
+  splitSubtitle,
   updateSubtitle,
   updateSubtitleEndTime,
   updateSubtitleStartTime,
@@ -105,6 +106,16 @@ export default function Home() {
   const onDeleteSubtitle = useCallback((id: number) => {
     setSubtitles((prevSubtitles) => deleteSubtitle(prevSubtitles, id));
   }, []);
+
+  const handleSplitSubtitle = (
+    id: number,
+    caretPos: number,
+    textLength: number
+  ) => {
+    setSubtitles((prev) => {
+      return splitSubtitle(prev, id, caretPos, textLength);
+    });
+  };
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -221,6 +232,7 @@ export default function Home() {
                   onDeleteSubtitle={(id: number) => {
                     setSubtitles(deleteSubtitle(subtitles, id));
                   }}
+                  onSplitSubtitle={handleSplitSubtitle}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">

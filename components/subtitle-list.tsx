@@ -23,6 +23,7 @@ interface SubtitleListProps {
   onMergeSubtitles: (id1: number, id2: number) => void;
   onAddSubtitle: (beforeId: number, afterId: number | null) => void;
   onDeleteSubtitle: (id: number) => void;
+  onSplitSubtitle: (id: number, caretPos: number, textLength: number) => void;
 }
 
 export function SubtitleList({
@@ -35,6 +36,7 @@ export function SubtitleList({
   onMergeSubtitles,
   onAddSubtitle,
   onDeleteSubtitle,
+  onSplitSubtitle,
 }: SubtitleListProps) {
   const [editingStartTimeId, setEditingStartTimeId] = useState<number | null>(
     null
@@ -252,6 +254,29 @@ export function SubtitleList({
                       onBlur={() => {
                         onUpdateSubtitle(subtitle.id, editText);
                         setEditingTextId(null);
+                      }}
+                      onKeyDown={(e) => {
+                        // Check SHIFT + ENTER
+                        if (e.key === "Enter" && e.shiftKey) {
+                          e.preventDefault();
+                          // caretPos is e.currentTarget.selectionStart
+                          // total text length is e.currentTarget.value.length
+                          const caretPos = e.currentTarget.selectionStart;
+                          const totalLen = e.currentTarget.value.length;
+
+                          onSplitSubtitle(subtitle.id, caretPos, totalLen);
+
+                          // If you also want to end editing after splitting:
+                          setEditingTextId(null);
+                          return;
+                        }
+
+                        // Optionally handle normal Enter key
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          // e.g. confirm edit
+                          onUpdateSubtitle(subtitle.id, editText);
+                          setEditingTextId(null);
+                        }
                       }}
                       className="w-full p-2"
                     />
