@@ -72,7 +72,7 @@ export default function FaqPage() {
         Will you actively maintain this app?
       </h2>
       <p>
-        This app is open sourced on github{" "}
+        This app is open sourced on GitHub{" "}
         <a
           href="https://github.com/laubonghaudoi/subtitle-editor"
           className="hover:underline text-blue-600 hover:text-blue-800"
@@ -84,6 +84,16 @@ export default function FaqPage() {
         project and your contributions are always welcomed!
       </p>
       <h2 className="text-xl font-bold my-4">Have feedback?</h2>
+      <p>
+        Feel free to{" "}
+        <a
+          href="https://github.com/laubonghaudoi/subtitle-editor/issues"
+          className="hover:underline text-blue-600 hover:text-blue-800"
+        >
+          open an issue on GitHub
+        </a>{" "}
+        .
+      </p>
       <Button asChild variant="secondary" className="my-8">
         <Link href="/">Back to Editor</Link>
       </Button>

@@ -24,6 +24,8 @@ interface SubtitleListProps {
   onAddSubtitle: (beforeId: number, afterId: number | null) => void;
   onDeleteSubtitle: (id: number) => void;
   onSplitSubtitle: (id: number, caretPos: number, textLength: number) => void;
+  setIsPlaying: (isPlaying: boolean) => void;
+  setPlaybackTime: (time: number) => void;
 }
 
 export function SubtitleList({
@@ -37,6 +39,8 @@ export function SubtitleList({
   onAddSubtitle,
   onDeleteSubtitle,
   onSplitSubtitle,
+  setIsPlaying,
+  setPlaybackTime,
 }: SubtitleListProps) {
   const [editingStartTimeId, setEditingStartTimeId] = useState<number | null>(
     null
@@ -130,8 +134,19 @@ export function SubtitleList({
             <div
               id={`subtitle-${subtitle.id}`}
               key={subtitle.id}
+              tabIndex={0}
               onClick={() => onScrollToRegion(subtitle.id)}
-              onKeyDown={() => {}}
+              onFocus={() => {
+                setPlaybackTime(timeToSeconds(subtitle.startTime));
+                // setIsPlaying(true); // Removed from onFocus
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Tab") {
+                  e.preventDefault();
+                  setPlaybackTime(timeToSeconds(subtitle.startTime));
+                  setIsPlaying(true);
+                }
+              }}
               className={`px-4 py-2 border-b border-gray-500 hover:bg-secondary/50 cursor-pointer grid grid-cols-[1rem_7rem_1fr] gap-4 items-center ${
                 timeToSeconds(subtitle.startTime) <= currentTime &&
                 timeToSeconds(subtitle.endTime) >= currentTime
@@ -256,6 +271,11 @@ export function SubtitleList({
                         setEditingTextId(null);
                       }}
                       onKeyDown={(e) => {
+                        // Stop space key propagation when editing
+                        if (e.key === " ") {
+                          e.stopPropagation();
+                        }
+
                         // Check SHIFT + ENTER
                         if (e.key === "Enter" && e.shiftKey) {
                           e.preventDefault();

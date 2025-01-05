@@ -99,7 +99,8 @@ export function VideoPlayer({
         <p className="my-4 text-lg">
           Supported formats: <code>m4a</code>, <code>mp3</code>,{" "}
           <code>mp4</code>, <code>wav</code>, <code>aac</code>, <code>wma</code>
-          , <code>flac</code>, <code>opus</code>, <code>ogg</code>
+          , <code>flac</code>, <code>opus</code>, <code>ogg</code>,{" "}
+          <code>webm</code>
         </p>
       </div>
     );

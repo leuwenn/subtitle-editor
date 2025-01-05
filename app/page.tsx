@@ -140,6 +140,9 @@ export default function Home() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if the focused element is a textarea
+      if (document.activeElement?.tagName === "TEXTAREA") return;
+
       if (event.code === "Space") {
         event.preventDefault();
         setIsPlaying(!isPlaying);
@@ -256,6 +259,8 @@ export default function Home() {
                     setSubtitles(deleteSubtitle(subtitles, id));
                   }}
                   onSplitSubtitle={handleSplitSubtitle}
+                  setIsPlaying={setIsPlaying}
+                  setPlaybackTime={setPlaybackTime}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground rounded-sm">
@@ -353,11 +358,15 @@ export default function Home() {
             <div className="flex flex-col items-left text-lg  h-full text-gray-600 px-8 py-4 border-t-2 border-black">
               <p className="my-4">After loading the media and subtitles:</p>
               <ul className="list-disc list-inside">
-                <li>Click the subtitle text to enter edit mode.</li>
-                <li>Use the icons to add, merge or delete subtitles.</li>
+                <li>Click the subtitle text or time stamps to edit.</li>
+                <li>
+                  When editing a subtitle text, press <kbd>shift</kbd> +{" "}
+                  <kbd>enter</kbd> to split the subtitle into two.
+                </li>
+                <li>Click the icons to add, merge or delete subtitles.</li>
                 <li>
                   Drag the dashed borders on the waveform to change the
-                  subtitles' timestamps.
+                  subtitles' time stamps.
                 </li>
                 <li>
                   Remember to click "Save SRT" to save the subtitles after you
