@@ -346,7 +346,6 @@ export default forwardRef(function WaveformVisualizer(
   }, [wavesurfer, subtitles]);
 
   // Handle Wavesurfer events
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     if (!wavesurfer) return;
 
@@ -355,23 +354,17 @@ export default forwardRef(function WaveformVisualizer(
       // Build regions once initially
       updateRegions();
       wavesurfer.setMuted(true);
-      // If you want to auto-play after load:
-      if (isPlaying) {
-        wavesurfer.play();
-      } else {
-        wavesurfer.pause();
-      }
     };
 
     // If the user clicks "play" on the waveform, ensure it's muted and sync with parent
     const handlePlay = () => {
       wavesurfer.setMuted(true);
-      onPlayPause(true);
+      onPlayPause(true); // Only update the parent state
     };
 
     // If the user clicks "pause" on the waveform, sync with parent
     const handlePause = () => {
-      onPlayPause(false);
+      onPlayPause(false); // Only update the parent state
     };
 
     // Called whenever a region is dragged/resized
@@ -434,6 +427,8 @@ export default forwardRef(function WaveformVisualizer(
 
     // Register events
     wavesurfer.on("ready", handleReady);
+    wavesurfer.on("play", handlePlay);
+    wavesurfer.on("pause", handlePause);
 
     // Or if you want to do something on "region-updated":
     const regionsPlugin = wavesurfer
@@ -446,13 +441,25 @@ export default forwardRef(function WaveformVisualizer(
     return () => {
       // Cleanup
       wavesurfer.un("ready", handleReady);
-      wavesurfer.on("play", handlePlay);
-      wavesurfer.on("pause", handlePause);
+      wavesurfer.un("play", handlePlay);
+      wavesurfer.un("pause", handlePause);
       if (regionsPlugin) {
         regionsPlugin.un("region-updated", handleRegionUpdate);
       }
     };
-  }, [wavesurfer, isPlaying, subtitles, onUpdateSubtitleTiming, updateRegions]);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  }, [wavesurfer, subtitles, onUpdateSubtitleTiming, updateRegions]);
+
+  // Play/Pause when isPlaying prop changes
+  useEffect(() => {
+    if (!wavesurfer) return;
+
+    if (isPlaying) {
+      wavesurfer.play();
+    } else {
+      wavesurfer.pause();
+    }
+  }, [isPlaying, wavesurfer]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
@@ -481,16 +488,16 @@ export default forwardRef(function WaveformVisualizer(
   }, [subtitles, wavesurfer]);
 
   return (
-    <div className="relative w-full h-full border-t-2 border-black">
+    <div className="relative w-full h-full border-black">
       <div
         ref={containerRef}
-        className="w-full h-full bg-secondary rounded-lg"
+        className="w-full h-full"
         role="button"
         tabIndex={0}
       />
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-secondary/50">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center h-full">
+          <div className="w-8 h-full border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
     </div>

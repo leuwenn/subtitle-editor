@@ -14,8 +14,10 @@ interface VideoPlayerProps {
   setMediaFileName: (name: string) => void;
   onProgress: (time: number) => void;
   onPlayPause: (playing: boolean) => void;
+  onDuration: (duration: number) => void;
   seekTime: number;
   isPlaying: boolean;
+  playbackRate: number;
 }
 
 export function VideoPlayer({
@@ -25,12 +27,21 @@ export function VideoPlayer({
   setMediaFileName,
   onProgress,
   onPlayPause,
+  onDuration,
   seekTime,
   isPlaying,
+  playbackRate,
 }: VideoPlayerProps) {
   const [mediaUrl, setMediaUrl] = useState<string>("");
   const [vttUrl, setVttUrl] = useState("");
   const playerRef = useRef<ReactPlayer>(null);
+  const [isVideo, setIsVideo] = useState(false);
+
+  useEffect(() => {
+    if (mediaFile) {
+      setIsVideo(mediaFile.type.startsWith("video/"));
+    }
+  }, [mediaFile]);
 
   useEffect(() => {
     if (playerRef.current && typeof seekTime === "number") {
@@ -101,7 +112,6 @@ export function VideoPlayer({
         url={mediaUrl}
         width="100%"
         height="100%"
-        controls={true}
         progressInterval={100}
         onProgress={(state) => {
           const player = playerRef.current?.getInternalPlayer();
@@ -111,10 +121,12 @@ export function VideoPlayer({
         }}
         onPlay={() => onPlayPause(true)}
         onPause={() => onPlayPause(false)}
+        onDuration={onDuration}
         playing={isPlaying}
+        playbackRate={playbackRate}
         config={{
           file: {
-            forceVideo: true,
+            forceVideo: false, // Do not force video
             attributes: {
               controlsList: "nodownload",
               playsInline: true,

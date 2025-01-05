@@ -36,6 +36,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { IconBadgeCc, IconSearch } from "@tabler/icons-react";
 import { FindReplace } from "@/components/find-replace";
+import { CustomControls } from "@/components/custom-controls";
 
 const WaveformVisualizer = dynamic(
   () => import("@/components/waveform-visualizer"),
@@ -61,6 +62,8 @@ export default function Home() {
 
   const [playbackTime, setPlaybackTime] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [duration, setDuration] = useState<number>(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
 
   const handleFileUpload = async (file: File) => {
     setSrtFileName(file.name);
@@ -135,17 +138,33 @@ export default function Home() {
     };
   }, [subtitles]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code === "Space") {
+        event.preventDefault();
+        setIsPlaying(!isPlaying);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isPlaying]);
+
   return (
     <div className="flex flex-col h-screen">
       <nav className="h-[6vh] border-black border-b-2 flex items-center px-12 justify-between">
         <h1 className="text-lg font-semibold">Subtitle Editor</h1>
         <div className="flex gap-4 items-center">
-          <FindReplace subtitles={subtitles} setSubtitles={setSubtitles} />
           <Link href="/faq" target="_blank">
             <Button variant="ghost">
               <QuestionMarkCircledIcon />
             </Button>
           </Link>
+          <FindReplace subtitles={subtitles} setSubtitles={setSubtitles} />
+
           <Label className="cursor-pointer">
             <Input
               type="file"
@@ -205,7 +224,7 @@ export default function Home() {
       {/* Main content area */}
       <div className="flex-1 flex flex-col">
         {/* Top section - Split panels */}
-        <div className="flex h-[70vh]">
+        <div className="flex h-[64vh]">
           {/* Left panel - Subtitle list */}
           <div className="w-1/2">
             <div className="h-full">
@@ -284,38 +303,55 @@ export default function Home() {
               setMediaFileName={setMediaFileName}
               onProgress={(time) => setPlaybackTime(time)}
               onPlayPause={(playing) => setIsPlaying(playing)}
+              onDuration={(duration) => setDuration(duration)}
               seekTime={playbackTime}
               isPlaying={isPlaying}
+              playbackRate={playbackRate}
             />
           </div>
         </div>
 
         {/* Bottom section - Waveform */}
         <div className="h-[20vh]">
+          {/* Custom Controls */}
+
           {mediaFile ? (
-            <WaveformVisualizer
-              ref={waveformRef}
-              mediaFile={mediaFile}
-              currentTime={playbackTime}
-              isPlaying={isPlaying}
-              subtitles={subtitles}
-              onSeek={setPlaybackTime}
-              onPlayPause={setIsPlaying}
-              onUpdateSubtitleTiming={(id, startTime, endTime) => {
-                setSubtitles((subs) =>
-                  subs.map((sub) =>
-                    sub.id === id ? { ...sub, startTime, endTime } : sub
-                  )
-                );
-              }}
-              onUpdateSubtitleText={(id: number, newText: string) => {
-                setSubtitles(updateSubtitle(subtitles, id, newText));
-              }}
-              onDeleteSubtitle={onDeleteSubtitle}
-            />
+            <>
+              <CustomControls
+                isPlaying={isPlaying}
+                playbackTime={playbackTime}
+                duration={duration}
+                onPlayPause={() => setIsPlaying(!isPlaying)}
+                onSeek={(time) => setPlaybackTime(time)}
+                playbackRate={playbackRate}
+                onChangePlaybackRate={(rate) =>
+                  setPlaybackRate(Number.parseFloat(rate))
+                }
+              />
+              <WaveformVisualizer
+                ref={waveformRef}
+                mediaFile={mediaFile}
+                currentTime={playbackTime}
+                isPlaying={isPlaying}
+                subtitles={subtitles}
+                onSeek={setPlaybackTime}
+                onPlayPause={setIsPlaying}
+                onUpdateSubtitleTiming={(id, startTime, endTime) => {
+                  setSubtitles((subs) =>
+                    subs.map((sub) =>
+                      sub.id === id ? { ...sub, startTime, endTime } : sub
+                    )
+                  );
+                }}
+                onUpdateSubtitleText={(id: number, newText: string) => {
+                  setSubtitles(updateSubtitle(subtitles, id, newText));
+                }}
+                onDeleteSubtitle={onDeleteSubtitle}
+              />
+            </>
           ) : (
-            <div className="text-lg  h-full text-gray-600 px-8 py-4 border-t-2 border-black">
-              <p>After loading the media and subtitles:</p>
+            <div className="flex flex-col items-left text-lg  h-full text-gray-600 px-8 py-4 border-t-2 border-black">
+              <p className="my-4">After loading the media and subtitles:</p>
               <ul className="list-disc list-inside">
                 <li>Click the subtitle text to enter edit mode.</li>
                 <li>Use the icons to add, merge or delete subtitles.</li>
