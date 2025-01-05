@@ -73,6 +73,53 @@ export function SubtitleList({
     }
   }, [currentTime, subtitles]);
 
+  const handleTimeUpdate = (
+    id: number,
+    newTime: string,
+    updateFunction: (id: number, newTime: string) => void,
+    setEditingId: (id: number | null) => void,
+    isStartTime = false
+  ) => {
+    if (!isValidTime(newTime)) {
+      toast({
+        title: "Invalid time format",
+        description: "Please use the format HH:MM:SS,MS (e.g., 00:00:20,450).",
+      });
+      setEditingId(null);
+      return;
+    }
+
+    const subtitle = subtitles.find((sub) => sub.id === id);
+    if (!subtitle) return;
+
+    const newTimeInSeconds = timeToSeconds(newTime);
+
+    if (isStartTime) {
+      if (newTimeInSeconds > timeToSeconds(subtitle.endTime)) {
+        toast({
+          title: "Invalid start time",
+          description:
+            "Start time cannot be later than the end time of the subtitle.",
+        });
+        setEditingId(null);
+        return;
+      }
+    } else {
+      if (newTimeInSeconds < timeToSeconds(subtitle.startTime)) {
+        toast({
+          title: "Invalid end time",
+          description:
+            "End time cannot be earlier than the start time of the subtitle.",
+        });
+        setEditingId(null);
+        return;
+      }
+    }
+
+    updateFunction(id, newTime);
+    setEditingId(null);
+  };
+
   return (
     <div ref={listRef} className="h-full overflow-y-scroll">
       <TooltipProvider>
@@ -104,18 +151,22 @@ export function SubtitleList({
                     }}
                     value={editStartTime}
                     onChange={(e) => setEditStartTime(e.target.value)}
-                    onBlur={() => {
-                      if (isValidTime(editStartTime)) {
-                        onUpdateSubtitleStartTime(subtitle.id, editStartTime);
-                        setEditingStartTimeId(null);
-                      } else {
-                        toast({
-                          title: "Invalid time format",
-                          description:
-                            "Please use the format HH:MM:SS,MS (e.g., 00:00:20,450).",
-                        });
-                        setEditStartTime(subtitle.startTime);
-                        setEditingStartTimeId(null);
+                    onBlur={() =>
+                      handleTimeUpdate(
+                        subtitle.id,
+                        editStartTime,
+                        onUpdateSubtitleStartTime,
+                        setEditingStartTimeId
+                      )
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleTimeUpdate(
+                          subtitle.id,
+                          editStartTime,
+                          onUpdateSubtitleStartTime,
+                          setEditingStartTimeId
+                        );
                       }
                     }}
                     className="p-1 w-26 h-8 text-center text-black"
@@ -147,18 +198,22 @@ export function SubtitleList({
                     }}
                     value={editEndTime}
                     onChange={(e) => setEditEndTime(e.target.value)}
-                    onBlur={() => {
-                      if (isValidTime(editEndTime)) {
-                        onUpdateSubtitleEndTime(subtitle.id, editEndTime);
-                        setEditingEndTimeId(null);
-                      } else {
-                        toast({
-                          title: "Invalid time format",
-                          description:
-                            "Please use the format HH:MM:SS,MS (e.g., 00:00:20,450).",
-                        });
-                        setEditEndTime(subtitle.endTime);
-                        setEditingEndTimeId(null);
+                    onBlur={() =>
+                      handleTimeUpdate(
+                        subtitle.id,
+                        editEndTime,
+                        onUpdateSubtitleEndTime,
+                        setEditingEndTimeId
+                      )
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleTimeUpdate(
+                          subtitle.id,
+                          editEndTime,
+                          onUpdateSubtitleEndTime,
+                          setEditingEndTimeId
+                        );
                       }
                     }}
                     className="p-1 w-26 h-8 text-center text-black"
