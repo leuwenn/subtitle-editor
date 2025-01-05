@@ -43,3 +43,8 @@ export function srtToVtt(srtString: string): string {
 export const isValidTime = (time: string): boolean => {
   return /^\d{2}:\d{2}:\d{2},\d{3}$/.test(time);
 };
+
+// Helper function to escape regex special characters
+export const escapeRegExp = (string: string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};

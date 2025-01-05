@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { escapeRegExp } from "@/lib/utils";
 
 interface FindReplaceProps {
   subtitles: Subtitle[];
@@ -36,6 +37,7 @@ export function FindReplace({ subtitles, setSubtitles }: FindReplaceProps) {
   const [replaceText, setReplaceText] = useState("");
   const [isCaseSensitive, setIsCaseSensitive] = useState(false);
   const [isMatchFullWord, setIsMatchFullWord] = useState(false);
+  const [isRegexMode, setIsRegexMode] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [matchedSubtitles, setMatchedSubtitles] = useState<Subtitle[]>([]);
@@ -45,9 +47,19 @@ export function FindReplace({ subtitles, setSubtitles }: FindReplaceProps) {
 
   const handleReplace = () => {
     const regexFlags = isCaseSensitive ? "g" : "gi";
-    const findRegex = isMatchFullWord
-      ? new RegExp(`\\b${findText}\\b`, regexFlags)
-      : new RegExp(findText, regexFlags);
+    let findRegex: RegExp;
+    try {
+      if (isRegexMode) {
+        findRegex = new RegExp(findText, regexFlags);
+      } else if (isMatchFullWord) {
+        findRegex = new RegExp(`\\b${escapeRegExp(findText)}\\b`, regexFlags);
+      } else {
+        findRegex = new RegExp(escapeRegExp(findText), regexFlags);
+      }
+    } catch (e) {
+      // Handle invalid regex
+      findRegex = /(?:)/; // Empty regex that won't match anything
+    }
 
     const updatedSubtitles = subtitles.map((subtitle) => {
       if (selectedSubtitles.has(subtitle.id) && findRegex.test(subtitle.text)) {
@@ -115,17 +127,27 @@ export function FindReplace({ subtitles, setSubtitles }: FindReplaceProps) {
   useEffect(() => {
     if (findText) {
       const regexFlags = isCaseSensitive ? "g" : "gi";
-      const findRegex = isMatchFullWord
-        ? new RegExp(`\\b${findText}\\b`, regexFlags)
-        : new RegExp(findText, regexFlags);
-
-      setMatchedSubtitles(
-        subtitles.filter((subtitle) => findRegex.test(subtitle.text))
-      );
+      let findRegex: RegExp;
+      try {
+        if (isRegexMode) {
+          findRegex = new RegExp(findText, regexFlags);
+        } else if (isMatchFullWord) {
+          findRegex = new RegExp(`\\b${escapeRegExp(findText)}\\b`, regexFlags);
+        } else {
+          findRegex = new RegExp(escapeRegExp(findText), regexFlags);
+        }
+        setMatchedSubtitles(
+          subtitles.filter((subtitle) => findRegex.test(subtitle.text))
+        );
+      } catch (e) {
+        // Handle invalid regex
+        setMatchedSubtitles([]);
+      }
     } else {
       setMatchedSubtitles([]);
+      setSelectedSubtitles(new Set());
     }
-  }, [subtitles, findText, isCaseSensitive, isMatchFullWord]);
+  }, [subtitles, findText, isCaseSensitive, isMatchFullWord, isRegexMode]);
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -135,11 +157,11 @@ export function FindReplace({ subtitles, setSubtitles }: FindReplaceProps) {
           Find / Replace
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[48rem]">
         <DialogHeader>
           <DialogTitle>Find and Replace</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-4 py-4 max-h-[36rem] overflow-auto">
+        <div className="flex flex-col gap-4 py-4">
           <div className="flex items-center gap-2">
             <Label htmlFor="find">Find</Label>
             <Input
@@ -190,6 +212,25 @@ export function FindReplace({ subtitles, setSubtitles }: FindReplaceProps) {
                 Match full word
               </label>
             </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="regex-mode"
+                checked={isRegexMode}
+                onCheckedChange={(checked) => {
+                  if (checked === "indeterminate") {
+                    setIsRegexMode(true);
+                  } else {
+                    setIsRegexMode(checked);
+                  }
+                }}
+              />
+              <label
+                htmlFor="regex-mode"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Use regex
+              </label>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="replace">Replace with</Label>
@@ -200,66 +241,97 @@ export function FindReplace({ subtitles, setSubtitles }: FindReplaceProps) {
               className="flex-1"
             />
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]">
-                  <Checkbox
-                    checked={
-                      matchedSubtitles.length > 0 &&
-                      matchedSubtitles.every((sub) =>
-                        selectedSubtitles.has(sub.id)
-                      )
-                    }
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedSubtitles(
-                          new Set(matchedSubtitles.map((sub) => sub.id))
-                        );
-                      } else {
-                        setSelectedSubtitles(new Set());
+          <div className="text-sm text-gray-500">
+            {selectedSubtitles.size} selected
+          </div>
+          <div className="w-full max-h-[32rem] overflow-y-auto">
+            <Table className="w-full border-collapse table-fixed ">
+              <TableHeader className="bg-gray-200 sticky top-0">
+                <TableRow className="border-black">
+                  <TableHead className="sticky top-0 w-8 text-center text-black">
+                    <Checkbox
+                      checked={
+                        matchedSubtitles.length > 0 &&
+                        matchedSubtitles.every((sub) =>
+                          selectedSubtitles.has(sub.id)
+                        )
                       }
-                    }}
-                  />
-                </TableHead>
-                <TableHead>Original</TableHead>
-                <TableHead>Preview</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {matchedSubtitles.map((subtitle) => {
-                const regexFlags = isCaseSensitive ? "g" : "gi";
-                const findRegex = isMatchFullWord
-                  ? new RegExp(`\\b${findText}\\b`, regexFlags)
-                  : new RegExp(findText, regexFlags);
-                const newText = subtitle.text.replace(findRegex, replaceText);
-                return (
-                  <TableRow key={subtitle.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedSubtitles.has(subtitle.id)}
-                        onCheckedChange={(checked) => {
-                          const newSelected = new Set(selectedSubtitles);
-                          if (checked) {
-                            newSelected.add(subtitle.id);
-                          } else {
-                            newSelected.delete(subtitle.id);
-                          }
-                          setSelectedSubtitles(newSelected);
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {highlightMatches(subtitle.text, findRegex)}
-                    </TableCell>
-                    <TableCell>
-                      {highlightReplacements(subtitle.text, newText, findRegex)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedSubtitles(
+                            new Set(matchedSubtitles.map((sub) => sub.id))
+                          );
+                        } else {
+                          setSelectedSubtitles(new Set());
+                        }
+                      }}
+                    />
+                  </TableHead>
+                  <TableHead className="sticky top-0 text-black">
+                    Original
+                  </TableHead>
+                  <TableHead className="sticky top-0 text-black">
+                    Preview
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {matchedSubtitles.length > 0 ? (
+                  matchedSubtitles.map((subtitle) => {
+                    const regexFlags = isCaseSensitive ? "g" : "gi";
+                    const findRegex = isMatchFullWord
+                      ? new RegExp(`\\b${findText}\\b`, regexFlags)
+                      : new RegExp(findText, regexFlags);
+                    const newText = subtitle.text.replace(
+                      findRegex,
+                      replaceText
+                    );
+                    return (
+                      <TableRow
+                        key={subtitle.id}
+                        className="hover:bg-gray-100 border-black"
+                      >
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={selectedSubtitles.has(subtitle.id)}
+                            onCheckedChange={(checked) => {
+                              const newSelected = new Set(selectedSubtitles);
+                              if (checked) {
+                                newSelected.add(subtitle.id);
+                              } else {
+                                newSelected.delete(subtitle.id);
+                              }
+                              setSelectedSubtitles(newSelected);
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {highlightMatches(subtitle.text, findRegex)}
+                        </TableCell>
+                        <TableCell>
+                          {highlightReplacements(
+                            subtitle.text,
+                            newText,
+                            findRegex
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={3}
+                      className="text-center text-gray-500 py-4"
+                    >
+                      No matches found
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
         <DialogFooter>
           <Button onClick={handleReplace}>Replace</Button>
