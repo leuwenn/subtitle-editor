@@ -34,7 +34,8 @@ import {
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { IconBadgeCc } from "@tabler/icons-react";
+import { IconBadgeCc, IconSearch } from "@tabler/icons-react";
+import { FindReplace } from "@/components/find-replace";
 
 const WaveformVisualizer = dynamic(
   () => import("@/components/waveform-visualizer"),
@@ -49,6 +50,7 @@ interface WaveformRef {
 
 export default function Home() {
   const waveformRef = useRef<WaveformRef>(null);
+
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [srtFileName, setSrtFileName] = useState<string>("subtitles.srt");
   const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
@@ -138,6 +140,7 @@ export default function Home() {
       <nav className="h-[6vh] border-black border-b-2 flex items-center px-12 justify-between">
         <h1 className="text-lg font-semibold">Subtitle Editor</h1>
         <div className="flex gap-4 items-center">
+          <FindReplace subtitles={subtitles} setSubtitles={setSubtitles} />
           <Link href="/faq" target="_blank">
             <Button variant="ghost">
               <QuestionMarkCircledIcon />
@@ -164,7 +167,7 @@ export default function Home() {
               onClick={() => {
                 document.getElementById("media-file-input")?.click();
               }}
-              className="bg-cyan-300 hover:bg-cyan-500 hover:text-white text-black"
+              className="bg-cyan-300 hover:bg-cyan-500 hover:text-white text-black rounded-sm"
             >
               <VideoIcon />
               <span className="max-w-36 flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-left">
@@ -185,12 +188,13 @@ export default function Home() {
               onClick={() => {
                 document.getElementById("srt-file-input")?.click();
               }}
-              className="hover:bg-amber-500 hover:text-white bg-amber-300 text-black"
+              className="hover:bg-amber-500 hover:text-white bg-amber-300 text-black rounded-sm"
             >
               <IconBadgeCc />
               Load SRT
             </Button>
           </Label>
+
           <Button onClick={downloadSRT} disabled={subtitles.length === 0}>
             <DownloadIcon />
             Save SRT
@@ -235,7 +239,7 @@ export default function Home() {
                   onSplitSubtitle={handleSplitSubtitle}
                 />
               ) : (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground rounded-sm">
                   <Label className="cursor-pointer text-xl hover:text-blue-500 underline">
                     Upload an SRT file
                     <Input
@@ -327,40 +331,40 @@ export default function Home() {
             </div>
           )}
         </div>
-      </div>
 
-      {/* SRT ovverwrite alert dialog */}
-      <AlertDialog
-        open={showOverwriteDialog}
-        onOpenChange={setShowOverwriteDialog}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Replace existing subtitles?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Loading a new SRT file will replace the current subtitles. Make
-              sure you have downloaded the current SRT first.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingSrtFile(null)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-500"
-              onClick={async () => {
-                if (pendingSrtFile) {
-                  await handleFileUpload(pendingSrtFile);
-                  setPendingSrtFile(null);
-                }
-                setShowOverwriteDialog(false);
-              }}
-            >
-              Yes
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* SRT ovverwrite alert dialog */}
+        <AlertDialog
+          open={showOverwriteDialog}
+          onOpenChange={setShowOverwriteDialog}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Replace existing subtitles?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Loading a new SRT file will replace the current subtitles. Make
+                sure you have downloaded the current SRT first.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setPendingSrtFile(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-600 hover:bg-red-500"
+                onClick={async () => {
+                  if (pendingSrtFile) {
+                    await handleFileUpload(pendingSrtFile);
+                    setPendingSrtFile(null);
+                  }
+                  setShowOverwriteDialog(false);
+                }}
+              >
+                Yes
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
