@@ -1,7 +1,11 @@
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { isValidTime, timeToSeconds } from "@/lib/utils";
 import type { Subtitle } from "@/types/subtitle";
-import { IconFold, IconTrash, IconPlus } from "@tabler/icons-react";
+import { IconFold, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "./ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -13,6 +17,8 @@ interface SubtitleListProps {
   subtitles: Subtitle[];
   currentTime?: number;
   onScrollToRegion: (id: number) => void;
+  onUpdateSubtitleStartTime: (id: number, newTime: string) => void;
+  onUpdateSubtitleEndTime: (id: number, newTime: string) => void;
   onUpdateSubtitle: (id: number, newText: string) => void;
   onMergeSubtitles: (id1: number, id2: number) => void;
   onAddSubtitle: (beforeId: number, afterId: number | null) => void;
@@ -23,25 +29,27 @@ export function SubtitleList({
   subtitles,
   currentTime = 0,
   onScrollToRegion,
+  onUpdateSubtitleStartTime,
+  onUpdateSubtitleEndTime,
   onUpdateSubtitle,
   onMergeSubtitles,
   onAddSubtitle,
   onDeleteSubtitle,
 }: SubtitleListProps) {
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingStartTimeId, setEditingStartTimeId] = useState<number | null>(
+    null
+  );
+  const [editStartTime, setEditStartTime] = useState("");
+  const [editingEndTimeId, setEditingEndTimeId] = useState<number | null>(null);
+  const [editEndTime, setEditEndTime] = useState("");
+
+  const [editingTextId, setEditingTextId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Function to convert SRT timestamp to seconds
-  const timeToSeconds = (time: string): number => {
-    const [hours, minutes, seconds] = time
-      .split(":")
-      .map((part) => Number.parseFloat(part.replace(",", ".")));
-    return hours * 3600 + minutes * 60 + seconds;
-  };
+  const { toast } = useToast();
 
   // Scroll to the current subtitle when user clicks a region in the waveform visualizer
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     if (!listRef.current) return;
 
@@ -75,23 +83,111 @@ export function SubtitleList({
               key={subtitle.id}
               onClick={() => onScrollToRegion(subtitle.id)}
               onKeyDown={() => {}}
-              className={`p-4 border-b border-gray-500 hover:bg-secondary/50 cursor-pointer grid grid-cols-[2rem_6rem_1fr] gap-4 items-center ${
+              className={`px-4 py-2 border-b border-gray-500 hover:bg-secondary/50 cursor-pointer grid grid-cols-[1rem_7rem_1fr] gap-4 items-center ${
                 timeToSeconds(subtitle.startTime) <= currentTime &&
                 timeToSeconds(subtitle.endTime) >= currentTime
                   ? "bg-secondary"
                   : ""
               }`}
             >
+              {/* Subtitle ID */}
               <div className="text-sm text-muted-foreground font-mono">
                 {subtitle.id}
               </div>
-              <div className="text-sm text-muted-foreground flex flex-col gap-2">
-                <span>{subtitle.startTime}</span>
-                <span>{subtitle.endTime}</span>
+
+              {/* Subtitle start and end time */}
+              <div className="text-sm text-muted-foreground flex flex-col gap-1">
+                {editingStartTimeId === subtitle.id ? (
+                  <Input
+                    ref={(input) => {
+                      if (input) input.focus();
+                    }}
+                    value={editStartTime}
+                    onChange={(e) => setEditStartTime(e.target.value)}
+                    onBlur={() => {
+                      if (isValidTime(editStartTime)) {
+                        onUpdateSubtitleStartTime(subtitle.id, editStartTime);
+                        setEditingStartTimeId(null);
+                      } else {
+                        toast({
+                          title: "Invalid time format",
+                          description:
+                            "Please use the format HH:MM:SS,MS (e.g., 00:00:20,450).",
+                        });
+                        setEditStartTime(subtitle.startTime);
+                        setEditingStartTimeId(null);
+                      }
+                    }}
+                    className="p-1 w-26 h-8 text-center text-black"
+                  />
+                ) : (
+                  <Button
+                    tabIndex={0}
+                    onClick={() => {
+                      setEditingStartTimeId(subtitle.id);
+                      setEditStartTime(subtitle.startTime);
+                    }}
+                    onKeyUp={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        setEditingStartTimeId(subtitle.id);
+                        setEditStartTime(subtitle.startTime);
+                      }
+                    }}
+                    variant="ghost"
+                    className="bg-transparent h-8"
+                  >
+                    {subtitle.startTime}
+                  </Button>
+                )}
+
+                {editingEndTimeId === subtitle.id ? (
+                  <Input
+                    ref={(input) => {
+                      if (input) input.focus();
+                    }}
+                    value={editEndTime}
+                    onChange={(e) => setEditEndTime(e.target.value)}
+                    onBlur={() => {
+                      if (isValidTime(editEndTime)) {
+                        onUpdateSubtitleEndTime(subtitle.id, editEndTime);
+                        setEditingEndTimeId(null);
+                      } else {
+                        toast({
+                          title: "Invalid time format",
+                          description:
+                            "Please use the format HH:MM:SS,MS (e.g., 00:00:20,450).",
+                        });
+                        setEditEndTime(subtitle.endTime);
+                        setEditingEndTimeId(null);
+                      }
+                    }}
+                    className="p-1 w-26 h-8 text-center text-black"
+                  />
+                ) : (
+                  <Button
+                    tabIndex={0}
+                    onClick={() => {
+                      setEditingEndTimeId(subtitle.id);
+                      setEditEndTime(subtitle.endTime);
+                    }}
+                    onKeyUp={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        setEditingEndTimeId(subtitle.id);
+                        setEditEndTime(subtitle.endTime);
+                      }
+                    }}
+                    variant="ghost"
+                    className="bg-transparent h-8"
+                  >
+                    {subtitle.endTime}
+                  </Button>
+                )}
               </div>
+
+              {/* Subtitle text */}
               <div className="flex justify-between items-start gap-4">
                 <div className="flex-1">
-                  {editingId === subtitle.id ? (
+                  {editingTextId === subtitle.id ? (
                     <Textarea
                       ref={(textArea) => {
                         if (textArea) textArea.focus();
@@ -100,7 +196,7 @@ export function SubtitleList({
                       onChange={(e) => setEditText(e.target.value)}
                       onBlur={() => {
                         onUpdateSubtitle(subtitle.id, editText);
-                        setEditingId(null);
+                        setEditingTextId(null);
                       }}
                       className="w-full p-2"
                     />
@@ -110,12 +206,12 @@ export function SubtitleList({
                       className="w-full text-left text-lg"
                       tabIndex={0}
                       onClick={() => {
-                        setEditingId(subtitle.id);
+                        setEditingTextId(subtitle.id);
                         setEditText(subtitle.text);
                       }}
                       onKeyUp={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
-                          setEditingId(subtitle.id);
+                          setEditingTextId(subtitle.id);
                           setEditText(subtitle.text);
                         }
                       }}
@@ -125,6 +221,7 @@ export function SubtitleList({
                   )}
                 </div>
 
+                {/* Delete button */}
                 <Tooltip>
                   <TooltipTrigger
                     onClick={() => onDeleteSubtitle(subtitle.id)}
@@ -136,6 +233,8 @@ export function SubtitleList({
                 </Tooltip>
               </div>
             </div>
+
+            {/* Merge and add button */}
             <div className="flex justify-center gap-12 -mt-3 -mb-3">
               {index < subtitles.length - 1 && (
                 <Tooltip>

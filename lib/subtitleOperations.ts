@@ -1,4 +1,5 @@
 import type { Subtitle } from "@/types/subtitle";
+import { secondsToTime, timeToSeconds } from "./utils";
 
 const DEFAULT_SUBTITLE_DURATION = 3; // seconds
 
@@ -9,6 +10,22 @@ export const reorderSubtitleIds = (subtitles: Subtitle[]): Subtitle[] => {
     nextId++;
     return { ...subtitle, id: newId };
   });
+};
+
+export const updateSubtitleStartTime = (id: number, newTime: string) => {
+  return (subtitles: Subtitle[]): Subtitle[] => {
+    return subtitles.map((sub) =>
+      sub.id === id ? { ...sub, startTime: newTime } : sub
+    );
+  };
+};
+
+export const updateSubtitleEndTime = (id: number, newTime: string) => {
+  return (subtitles: Subtitle[]): Subtitle[] => {
+    return subtitles.map((sub) =>
+      sub.id === id ? { ...sub, endTime: newTime } : sub
+    );
+  };
 };
 
 export const updateSubtitle = (
@@ -64,11 +81,11 @@ export const addSubtitle = (
   if (afterId === null) {
     // Adding at the end
     const endTimeSeconds =
-      timeStringToSeconds(beforeSub.endTime) + DEFAULT_SUBTITLE_DURATION;
+      timeToSeconds(beforeSub.endTime) + DEFAULT_SUBTITLE_DURATION;
     newSubtitle = {
       id: beforeSub.id + 1,
       startTime: beforeSub.endTime,
-      endTime: secondsToTimeString(endTimeSeconds),
+      endTime: secondsToTime(endTimeSeconds),
       text: "New subtitle",
     };
   } else {
@@ -91,18 +108,4 @@ export const addSubtitle = (
   ];
 
   return reorderSubtitleIds(updatedSubtitles);
-};
-
-// Helper functions to convert between time string and seconds
-const timeStringToSeconds = (timeString: string): number => {
-  const [hours, minutes, seconds] = timeString
-    .split(":")
-    .map((part) => Number.parseFloat(part.replace(",", ".")));
-  return hours * 3600 + minutes * 60 + seconds;
-};
-
-const secondsToTimeString = (seconds: number): string => {
-  const date = new Date(0);
-  date.setSeconds(seconds);
-  return date.toISOString().substr(11, 12).replace(".", ",");
 };

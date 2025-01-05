@@ -38,3 +38,8 @@ export function srtToVtt(srtString: string): string {
     .replace(/(\d\d:\d\d:\d\d),(\d\d\d)/g, "$1.$2")
     .replace(/(\r?\n\r?\n)/g, "\n")}`;
 }
+
+// Function to validate time format
+export const isValidTime = (time: string): boolean => {
+  return /^\d{2}:\d{2}:\d{2},\d{3}$/.test(time);
+};

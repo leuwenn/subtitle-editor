@@ -21,6 +21,8 @@ import {
   deleteSubtitle,
   mergeSubtitles,
   updateSubtitle,
+  updateSubtitleEndTime,
+  updateSubtitleStartTime,
 } from "@/lib/subtitleOperations";
 import type { Subtitle } from "@/types/subtitle";
 import {
@@ -200,6 +202,12 @@ export default function Home() {
                     if (waveformRef.current) {
                       waveformRef.current.scrollToRegion(id);
                     }
+                  }}
+                  onUpdateSubtitleStartTime={(id: number, newTime: string) => {
+                    setSubtitles(updateSubtitleStartTime(id, newTime));
+                  }}
+                  onUpdateSubtitleEndTime={(id: number, newTime: string) => {
+                    setSubtitles(updateSubtitleEndTime(id, newTime));
                   }}
                   onUpdateSubtitle={(id: number, newText: string) => {
                     setSubtitles(updateSubtitle(subtitles, id, newText));
