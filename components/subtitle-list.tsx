@@ -134,7 +134,6 @@ export function SubtitleList({
             <div
               id={`subtitle-${subtitle.id}`}
               key={subtitle.id}
-              tabIndex={0}
               onClick={() => onScrollToRegion(subtitle.id)}
               onFocus={() => {
                 setPlaybackTime(timeToSeconds(subtitle.startTime));
