@@ -261,14 +261,26 @@ export default forwardRef(function WaveformVisualizer(
     }
   }, [wavesurfer, currentTime]);
 
-  // Handle spacebar for play/pause
+  // Handle play/pause with debounce
+  const lastKeyPress = useRef(0);
+  const DEBOUNCE_TIME = 200; // 200ms debounce
+
+  const handlePlayPause = useCallback(() => {
+    const now = Date.now();
+    if (now - lastKeyPress.current < DEBOUNCE_TIME) {
+      return; // Ignore rapid keypresses
+    }
+    lastKeyPress.current = now;
+    onPlayPause(!isPlaying);
+  }, [isPlaying, onPlayPause]);
+
   useEffect(() => {
     const container = containerRef.current;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space") {
-        e.preventDefault(); // Prevent any default spacebar behavior
-        onPlayPause(!isPlaying); // Toggle play/pause
+        e.preventDefault();
+        handlePlayPause();
       }
     };
 
@@ -281,7 +293,7 @@ export default forwardRef(function WaveformVisualizer(
         container.removeEventListener("keydown", handleKeyDown);
       }
     };
-  }, [isPlaying, onPlayPause]); // Add isPlaying and onPlayPause as dependencies
+  }, [handlePlayPause]);
 
   /****************************************************************
    * Handle subtitle region creation and updates
@@ -311,7 +323,11 @@ export default forwardRef(function WaveformVisualizer(
       .find((p) => p instanceof RegionsPlugin);
     if (!regionsPlugin) return;
 
-    // 1) Remove existing regions
+    // 1) Remove existing regions and clear references
+    const regions = regionsPlugin.getRegions();
+    regions.map((region) => {
+      region.remove();
+    });
     regionsPlugin.clearRegions();
     subtitleToRegionMap.current.clear();
 
@@ -447,17 +463,25 @@ export default forwardRef(function WaveformVisualizer(
         regionsPlugin.un("region-updated", handleRegionUpdate);
       }
     };
-    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   }, [wavesurfer, subtitles, onUpdateSubtitleTiming, updateRegions]);
 
   // Play/Pause when isPlaying prop changes
   useEffect(() => {
     if (!wavesurfer) return;
 
-    if (isPlaying) {
-      wavesurfer.play();
-    } else {
-      wavesurfer.pause();
+    const now = Date.now();
+    if (now - lastKeyPress.current < DEBOUNCE_TIME) {
+      return; // Skip if we're within debounce period
+    }
+
+    try {
+      if (isPlaying) {
+        wavesurfer.play();
+      } else {
+        wavesurfer.pause();
+      }
+    } catch (error) {
+      console.warn("Play/pause operation failed:", error);
     }
   }, [isPlaying, wavesurfer]);
 

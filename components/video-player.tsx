@@ -43,6 +43,9 @@ export function VideoPlayer({
     }
   }, [mediaFile]);
 
+  const lastPlayStateChange = useRef<number>(0);
+  const DEBOUNCE_TIME = 200; // 200ms debounce
+
   useEffect(() => {
     if (playerRef.current && typeof seekTime === "number") {
       const player = playerRef.current;
@@ -52,6 +55,15 @@ export function VideoPlayer({
       }
     }
   }, [seekTime]);
+
+  // Handle play/pause with debounce
+  useEffect(() => {
+    const now = Date.now();
+    if (now - lastPlayStateChange.current < DEBOUNCE_TIME) {
+      return; // Ignore rapid changes
+    }
+    lastPlayStateChange.current = now;
+  }, [isPlaying]);
 
   useEffect(() => {
     if (mediaFile) {

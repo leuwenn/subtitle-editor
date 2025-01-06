@@ -11,7 +11,7 @@ export default function FaqPage() {
         none of them is ideal for me so I built this one. These are the ones
         they I have tried and what I think are missing in them:
       </p>
-      <ul className="list-disc ml-6">
+      <ul className="list-disc mx-6 my-2">
         <li>
           <a
             href="https://www.happyscribe.com/subtitle-tools/online-subtitle-editor/free"
@@ -68,6 +68,11 @@ export default function FaqPage() {
           are either too complex and feature-bloated, or are not free.
         </li>
       </ul>
+      <p>
+        What I want is a free, no installation or account sign-up required,
+        minimalistic editor with simple subtitle editing features and waveform
+        visualization.
+      </p>
       <h2 className="text-xl font-bold my-4">
         Will you actively maintain this app?
       </h2>
@@ -78,10 +83,10 @@ export default function FaqPage() {
           className="hover:underline text-blue-600 hover:text-blue-800"
         >
           laubonghaudoi/subtitle-editor
-        </a>{" "}
-        I will check issues and accept PRs regularly, but I am quite busy these
-        days so I may not have time to develop new features. This is a community
-        project and your contributions are always welcomed!
+        </a>
+        . I will check issues and accept PRs regularly, but I am quite busy
+        these days so I may not have time to develop new features. This is a
+        community project and your contributions are always welcomed!
       </p>
       <h2 className="text-xl font-bold my-4">Have feedback?</h2>
       <p>
@@ -91,8 +96,21 @@ export default function FaqPage() {
           className="hover:underline text-blue-600 hover:text-blue-800"
         >
           open an issue on GitHub
-        </a>{" "}
-        .
+        </a>
+        . I want to keep this app as minimalistic as possible, so these features
+        are non-goals and I don't plan to add them:
+      </p>
+      <ul className="list-disc mx-6 my-2">
+        <li>Account registration</li>
+        <li>Cloud storage</li>
+        <li>Collaborative editing</li>
+        <li>AI transcription</li>
+        <li>Translation</li>
+        <li>Complex subtitle editing such as VTT files.</li>
+      </ul>
+      <p>
+        If you need any of these advanced features, please use the other options
+        I listed above.
       </p>
       <Button asChild variant="secondary" className="my-8">
         <Link href="/">Back to Editor</Link>
