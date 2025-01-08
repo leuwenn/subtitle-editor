@@ -28,13 +28,30 @@ const getContentHtml = (
   endTime: string
 ): HTMLElement => {
   const content = document.createElement("div");
+  // This is the style for the parent div of the region
+  content.style.cssText += `
+    display:flex; 
+    flex-direction:column; 
+    height:100%; 
+    justify-content:space-between;
+  `;
 
   content.innerHTML = `
-    <div style="display: flex; justify-content: space-between; flex-wrap:wrap; padding-left: 1rem; padding-right: 1rem;">
+    <div style="display: flex;
+                justify-content: space-between; 
+                flex-wrap:wrap; 
+                padding-left: 1rem; 
+                padding-right: 1rem; 
+                padding-top: 1rem; 
+                color: #525252;">
       <em>${startTime}</em>
       <em>${endTime}</em>
     </div>
-    <div style="padding-left: 1rem; padding-right: 1rem;">
+    <div style="padding-left: 1rem; 
+                padding-right: 1rem; 
+                padding-bottom: 1.5rem; 
+                font-size: 1rem; 
+                color: #262626;">
       <span>${text}</span>
     </div>
 `;
@@ -42,34 +59,53 @@ const getContentHtml = (
   return content;
 };
 
-const styleRegionContent = (region: Region) => {
+const styleRegionHandles = (region: Region) => {
   // I have to do all these hakcy styling because the wavesurfer api doesn't allow custom styling regions
-
-  // This is the style for the parent div of the region
-  region.element.style.cssText +=
-    "display:flex; flex-direction:column; height:100%; justify-content:space-around;";
-
-  // This is the style of the child 'region-content' div:
-  const contentDiv = region.element.querySelector(
-    'div[part="region-content"]'
-  ) as HTMLDivElement;
-  if (contentDiv) {
-    contentDiv.style.cssText +=
-      "display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding-top: 0.5rem; padding-bottom: 1.5rem;";
-  }
-
   const leftHandleDiv = region.element.querySelector(
     'div[part="region-handle region-handle-left"]'
   ) as HTMLDivElement;
   if (leftHandleDiv) {
-    leftHandleDiv.style.cssText += `border-left: 2px dashed ${HANDLE_COLOR};`;
+    leftHandleDiv.style.cssText += `
+      border-left: 2px dashed ${HANDLE_COLOR};
+      width: 4px;
+    `;
+    // Create a child <span> to act as the arrow
+    const arrowEl = document.createElement("span");
+    arrowEl.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: -0.5rem;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-top: 1rem solid transparent;
+      border-bottom: 1rem solid transparent;
+      border-right: 0.5rem solid ${HANDLE_COLOR};
+    `;
+    leftHandleDiv.appendChild(arrowEl);
   }
 
   const rightHandleDiv = region.element.querySelector(
     'div[part="region-handle region-handle-right"]'
   ) as HTMLDivElement;
   if (rightHandleDiv) {
-    rightHandleDiv.style.cssText += `border-right: 2px dashed ${HANDLE_COLOR};`;
+    rightHandleDiv.style.cssText += `
+      border-right: 2px dashed ${HANDLE_COLOR};
+      width: 4px;
+    `;
+    const arrowEl = document.createElement("span");
+    arrowEl.style.cssText = `
+      position: absolute;
+      top: 50%;
+      right: -0.5rem;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-top: 1rem solid transparent;
+      border-bottom: 1rem solid transparent;
+      border-left: 0.5rem solid ${HANDLE_COLOR};
+    `;
+    rightHandleDiv.appendChild(arrowEl);
   }
 };
 
@@ -145,10 +181,27 @@ export default forwardRef(function WaveformVisualizer(
           }),
           Hover.create({
             lineColor: "#ff0000",
-            lineWidth: 1,
+            lineWidth: 2,
             labelBackground: "#555",
             labelColor: "#fff",
             labelSize: "12px",
+            formatTimeCallback: (seconds: number) => {
+              const hours = Math.floor(seconds / 3600);
+              const minutes = Math.floor((seconds % 3600) / 60);
+              const remainingSeconds = seconds % 60;
+              const milliseconds = Math.round(
+                (remainingSeconds - Math.floor(remainingSeconds)) * 1000
+              );
+
+              const paddedHours = String(hours).padStart(2, "0");
+              const paddedMinutes = String(minutes).padStart(2, "0");
+              const paddedSeconds = String(
+                Math.floor(remainingSeconds)
+              ).padStart(2, "0");
+              const paddedMilliseconds = String(milliseconds).padStart(3, "0");
+
+              return `${paddedHours}:${paddedMinutes}:${paddedSeconds},${paddedMilliseconds}`;
+            },
           }),
           RegionsPlugin.create(),
         ],
@@ -295,6 +348,26 @@ export default forwardRef(function WaveformVisualizer(
     };
   }, [handlePlayPause]);
 
+  // Play/Pause when isPlaying prop changes
+  useEffect(() => {
+    if (!wavesurfer) return;
+
+    const now = Date.now();
+    if (now - lastKeyPress.current < DEBOUNCE_TIME) {
+      return; // Skip if we're within debounce period
+    }
+
+    try {
+      if (isPlaying) {
+        wavesurfer.play();
+      } else {
+        wavesurfer.pause();
+      }
+    } catch (error) {
+      console.warn("Play/pause operation failed:", error);
+    }
+  }, [isPlaying, wavesurfer]);
+
   /****************************************************************
    * Handle subtitle region creation and updates
    *
@@ -354,14 +427,15 @@ export default forwardRef(function WaveformVisualizer(
         minLength: 0.1,
       });
 
-      styleRegionContent(region);
+      styleRegionHandles(region);
 
       // Save reference
       subtitleToRegionMap.current.set(subtitle.id, region);
     });
   }, [wavesurfer, subtitles]);
 
-  // Handle Wavesurfer events
+  // If subtitle time stamps change, update the regions
+  // biome-ignore lint/correctness/useExhaustiveDependencies: For unknown reasons, if I include `onPlayPause` in the dependencies, the regions are not rendered at all.
   useEffect(() => {
     if (!wavesurfer) return;
 
@@ -431,7 +505,7 @@ export default forwardRef(function WaveformVisualizer(
           ),
         });
 
-        styleRegionContent(region);
+        styleRegionHandles(region);
       }
 
       onUpdateSubtitleTiming(
@@ -465,33 +539,6 @@ export default forwardRef(function WaveformVisualizer(
     };
   }, [wavesurfer, subtitles, onUpdateSubtitleTiming, updateRegions]);
 
-  // Play/Pause when isPlaying prop changes
-  useEffect(() => {
-    if (!wavesurfer) return;
-
-    const now = Date.now();
-    if (now - lastKeyPress.current < DEBOUNCE_TIME) {
-      return; // Skip if we're within debounce period
-    }
-
-    try {
-      if (isPlaying) {
-        wavesurfer.play();
-      } else {
-        wavesurfer.pause();
-      }
-    } catch (error) {
-      console.warn("Play/pause operation failed:", error);
-    }
-  }, [isPlaying, wavesurfer]);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  useEffect(() => {
-    if (!wavesurfer) return;
-    // When subtitles change, update the regions
-    updateRegions();
-  }, [wavesurfer, subtitles, updateRegions]);
-
   // Update subtitle text requires only updating the target region content
   useEffect(() => {
     if (!wavesurfer) return;
@@ -506,7 +553,7 @@ export default forwardRef(function WaveformVisualizer(
           ),
         });
 
-        styleRegionContent(region);
+        styleRegionHandles(region);
       }
     });
   }, [subtitles, wavesurfer]);
