@@ -138,9 +138,12 @@ export default forwardRef(function WaveformVisualizer(
   ref: ForwardedRef<{ scrollToRegion: (id: number) => void }>
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
+
   const [mediaUrl, setMediaUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+
   const subtitleToRegionMap = useRef<Map<number, Region>>(new Map());
+  const prevSubtitlesEmpty = useRef<boolean>(true);
 
   // Load media file into wavesurfer
   useEffect(() => {
@@ -318,11 +321,10 @@ export default forwardRef(function WaveformVisualizer(
   const lastKeyPress = useRef(0);
   const DEBOUNCE_TIME = 200; // 200ms debounce
 
+  // Hitting space key should play/pause the media
   const handlePlayPause = useCallback(() => {
     const now = Date.now();
-    if (now - lastKeyPress.current < DEBOUNCE_TIME) {
-      return; // Ignore rapid keypresses
-    }
+    if (now - lastKeyPress.current < DEBOUNCE_TIME) return;
     lastKeyPress.current = now;
     onPlayPause(!isPlaying);
   }, [isPlaying, onPlayPause]);
@@ -340,7 +342,6 @@ export default forwardRef(function WaveformVisualizer(
     if (container) {
       container.addEventListener("keydown", handleKeyDown);
     }
-
     return () => {
       if (container) {
         container.removeEventListener("keydown", handleKeyDown);
@@ -348,14 +349,9 @@ export default forwardRef(function WaveformVisualizer(
     };
   }, [handlePlayPause]);
 
-  // Play/Pause when isPlaying prop changes
+  // Play/pause the waveform
   useEffect(() => {
     if (!wavesurfer) return;
-
-    const now = Date.now();
-    if (now - lastKeyPress.current < DEBOUNCE_TIME) {
-      return; // Skip if we're within debounce period
-    }
 
     try {
       if (isPlaying) {
@@ -387,7 +383,8 @@ export default forwardRef(function WaveformVisualizer(
    * And we only need to re-render the target region box.
    * */
 
-  const updateRegions = useCallback(() => {
+  // Initialize all regions from subtitles
+  const initRegions = useCallback(() => {
     if (!wavesurfer || wavesurfer.getDuration() === 0) return;
 
     // Grab the plugin by name in Wavesurfer v7
@@ -434,6 +431,18 @@ export default forwardRef(function WaveformVisualizer(
     });
   }, [wavesurfer, subtitles]);
 
+  // This is needed because if user loads the media first and then the subtitles,
+  // the regions are not automatically rendered
+  useEffect(() => {
+    const isCurrentlyEmpty = subtitles.length === 0;
+    if (prevSubtitlesEmpty.current !== isCurrentlyEmpty) {
+      prevSubtitlesEmpty.current = isCurrentlyEmpty;
+      if (wavesurfer) {
+        initRegions();
+      }
+    }
+  }, [subtitles.length, wavesurfer, initRegions]);
+
   // If subtitle time stamps change, update the regions
   // biome-ignore lint/correctness/useExhaustiveDependencies: For unknown reasons, if I include `onPlayPause` in the dependencies, the regions are not rendered at all.
   useEffect(() => {
@@ -442,7 +451,7 @@ export default forwardRef(function WaveformVisualizer(
     const handleReady = () => {
       setIsLoading(false);
       // Build regions once initially
-      updateRegions();
+      initRegions();
       wavesurfer.setMuted(true);
     };
 
@@ -537,7 +546,7 @@ export default forwardRef(function WaveformVisualizer(
         regionsPlugin.un("region-updated", handleRegionUpdate);
       }
     };
-  }, [wavesurfer, subtitles, onUpdateSubtitleTiming, updateRegions]);
+  }, [wavesurfer, subtitles, onUpdateSubtitleTiming, initRegions]);
 
   // Update subtitle text requires only updating the target region content
   useEffect(() => {
