@@ -46,6 +46,7 @@ export const mergeSubtitles = (
   const sub1 = subtitles.find((s) => s.id === id1);
   const sub2 = subtitles.find((s) => s.id === id2);
   if (!sub1 || !sub2) return subtitles;
+  if (sub1.id > sub2.id) return subtitles;
 
   const mergedSubtitle = {
     id: sub1.id,

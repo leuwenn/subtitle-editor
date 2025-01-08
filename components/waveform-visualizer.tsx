@@ -143,7 +143,6 @@ export default forwardRef(function WaveformVisualizer(
   const [isLoading, setIsLoading] = useState(false);
 
   const subtitleToRegionMap = useRef<Map<number, Region>>(new Map());
-  const prevSubtitlesEmpty = useRef<boolean>(true);
 
   // Load media file into wavesurfer
   useEffect(() => {
@@ -434,14 +433,9 @@ export default forwardRef(function WaveformVisualizer(
   // This is needed because if user loads the media first and then the subtitles,
   // the regions are not automatically rendered
   useEffect(() => {
-    const isCurrentlyEmpty = subtitles.length === 0;
-    if (prevSubtitlesEmpty.current !== isCurrentlyEmpty) {
-      prevSubtitlesEmpty.current = isCurrentlyEmpty;
-      if (wavesurfer) {
-        initRegions();
-      }
-    }
-  }, [subtitles.length, wavesurfer, initRegions]);
+    // When subtitles change, update the regions
+    initRegions();
+  }, [subtitles.length, initRegions]);
 
   // If subtitle time stamps change, update the regions
   // biome-ignore lint/correctness/useExhaustiveDependencies: For unknown reasons, if I include `onPlayPause` in the dependencies, the regions are not rendered at all.
@@ -468,12 +462,13 @@ export default forwardRef(function WaveformVisualizer(
 
     // Called whenever a region is dragged/resized
     const handleRegionUpdate = (region: Region) => {
+      // Dragged region id
       const subtitleId = Number.parseInt(region.id);
       let newStartTime = region.start;
       let newEndTime = region.end;
       let adjusted = false;
 
-      // Check for overlaps with other regions and adjust times
+      // Check for overlaps with preceding and following regions and adjust times
       subtitleToRegionMap.current.forEach((otherRegion, otherId) => {
         if (otherId !== subtitleId) {
           if (
