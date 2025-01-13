@@ -157,6 +157,15 @@ export default forwardRef(function WaveformVisualizer(
   /****************************************************************
    *  Initialize the wavesurfer with options and plugins
    * */
+
+  // Monkey patch the RegionPlug to avoid overlapping regions bug
+  const regionPlugin = RegionsPlugin.create();
+
+  // override the avoidOverlapping method, this method is a private method in the RegionPlugin
+  (regionPlugin as any).avoidOverlapping = function (region: any) {
+    // do nothing
+  }
+
   const { wavesurfer } = useWavesurfer(
     useMemo(
       () => ({
@@ -205,12 +214,14 @@ export default forwardRef(function WaveformVisualizer(
               return `${paddedHours}:${paddedMinutes}:${paddedSeconds},${paddedMilliseconds}`;
             },
           }),
-          RegionsPlugin.create(),
+          regionPlugin,
         ],
       }),
       [mediaUrl]
     )
   );
+
+  
 
   /****************************************************************
    * Scrolling and zooming the waveform
