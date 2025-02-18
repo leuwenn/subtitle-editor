@@ -345,6 +345,7 @@ export default forwardRef(function WaveformVisualizer(
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space") {
         e.preventDefault();
+        e.stopPropagation(); // Stop the event from bubbling up
         handlePlayPause();
       }
     };
