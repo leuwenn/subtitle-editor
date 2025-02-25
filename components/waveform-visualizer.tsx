@@ -167,6 +167,7 @@ export default forwardRef(function WaveformVisualizer(
   };
 
   const { wavesurfer } = useWavesurfer(
+    // biome-ignore lint/correctness/useExhaustiveDependencies: Avoid infinite re-rendering
     useMemo(
       () => ({
         container: containerRef,
@@ -440,8 +441,7 @@ export default forwardRef(function WaveformVisualizer(
     });
   }, [wavesurfer, subtitles]);
 
-  // This is needed because if user loads the media first and then the subtitles,
-  // the regions are not automatically rendered
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Avoid infinite rendering regions
   useEffect(() => {
     // When subtitles change, update the regions
     initRegions();
