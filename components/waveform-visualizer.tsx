@@ -18,6 +18,7 @@ import RegionsPlugin, {
   type Region,
 } from "wavesurfer.js/dist/plugins/regions.esm.js";
 import Timeline from "wavesurfer.js/dist/plugins/timeline.esm.js";
+import { IconLoader2 } from "@tabler/icons-react";
 
 const HANDLE_COLOR = "#f59e0b";
 const REGION_COLOR = "#fcd34d40";
@@ -634,8 +635,8 @@ export default forwardRef(function WaveformVisualizer(
         tabIndex={0}
       />
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center h-full">
-          <div className="w-8 h-full border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <IconLoader2 className="text-3xl text-black animate-spin" />
         </div>
       )}
     </div>
