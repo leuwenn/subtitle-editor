@@ -161,10 +161,10 @@ export default forwardRef(function WaveformVisualizer(
   // Monkey patch the RegionPlug to avoid overlapping regions bug
   const regionPlugin = RegionsPlugin.create();
 
-  // override the avoidOverlapping method, this method is a private method in the RegionPlugin
-  (regionPlugin as any).avoidOverlapping = function (region: any) {
+  // biome-ignore lint/suspicious/noExplicitAny: Override the avoidOverlapping method, this method is a private method in the RegionPlugin
+  (regionPlugin as any).avoidOverlapping = (region: Region) => {
     // do nothing
-  }
+  };
 
   const { wavesurfer } = useWavesurfer(
     useMemo(
@@ -220,8 +220,6 @@ export default forwardRef(function WaveformVisualizer(
       [mediaUrl]
     )
   );
-
-  
 
   /****************************************************************
    * Scrolling and zooming the waveform
@@ -480,28 +478,81 @@ export default forwardRef(function WaveformVisualizer(
       let newEndTime = region.end;
       let adjusted = false;
 
-      // Check for overlaps with preceding and following regions and adjust times
-      subtitleToRegionMap.current.forEach((otherRegion, otherId) => {
-        if (otherId !== subtitleId) {
-          if (
-            newStartTime < otherRegion.end &&
-            newEndTime > otherRegion.start
-          ) {
-            // Overlap detected
-            adjusted = true;
-            if (region.start < otherRegion.start) {
-              // Adjust end time to be just before the start of the other region
-              newEndTime = otherRegion.start;
-            } else {
-              // Adjust start time to be just after the end of the other region
-              newStartTime = otherRegion.end;
-            }
-          }
+      /** The following codes checks the drag-and-drop behavior of regions
+       * 1. If the region is dragged to pass over the preceding or following
+       *  region completely, i.e. the start time is later than the end time
+       *  of the following region, or the end time is earlier than the start
+       *  time of the preceding region), it will be reverted to its original
+       *  position.
+       * 2. If the region is dragged to partially overlap with other regions,
+       *  it will be adjusted to avoid overlapping.
+       */
+
+      // Get sorted list of regions by their subtitle IDs
+      const sortedRegions = Array.from(
+        subtitleToRegionMap.current.entries()
+      ).sort((a, b) => a[0] - b[0]);
+
+      // Find the index of the current region
+      const currentIndex = sortedRegions.findIndex(([id]) => id === subtitleId);
+
+      // Get previous and next regions if they exist
+      const prevRegion =
+        currentIndex > 0 ? sortedRegions[currentIndex - 1][1] : null;
+      const nextRegion =
+        currentIndex < sortedRegions.length - 1
+          ? sortedRegions[currentIndex + 1][1]
+          : null;
+
+      // Check for complete over with previous or next region
+      if (
+        (prevRegion && newEndTime < prevRegion.end) ||
+        (nextRegion && newStartTime > nextRegion.start)
+      ) {
+        // Completely passed over, revert to original position
+        const originalSubtitle = subtitles.find((s) => s.id === subtitleId);
+        if (originalSubtitle) {
+          const originalStartTime = timeToSeconds(originalSubtitle.startTime);
+          const originalEndTime = timeToSeconds(originalSubtitle.endTime);
+
+          // Revert the region to its original position
+          region.setOptions({
+            start: originalStartTime,
+            end: originalEndTime,
+          });
+
+          // Update the content to match original times
+          region.setOptions({
+            content: getContentHtml(
+              originalSubtitle.startTime,
+              originalSubtitle.text,
+              originalSubtitle.endTime
+            ),
+          });
+
+          styleRegionHandles(region);
         }
-      });
+        return; // Exit without updating subtitle timing
+      }
+
+      // If partial overlap was detected, update the region with adjusted times
+      if (
+        prevRegion &&
+        newStartTime < prevRegion.end &&
+        newEndTime > prevRegion.end
+      ) {
+        adjusted = true;
+        newStartTime = prevRegion.end;
+      } else if (
+        nextRegion &&
+        newStartTime < nextRegion.start &&
+        newEndTime > nextRegion.start
+      ) {
+        adjusted = true;
+        newEndTime = nextRegion.start;
+      }
 
       if (adjusted) {
-        // Update the region with adjusted times
         region.setOptions({
           start: newStartTime,
           end: newEndTime,
