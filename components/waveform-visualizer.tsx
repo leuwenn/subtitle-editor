@@ -2,6 +2,7 @@
 
 import { secondsToTime, timeToSeconds } from "@/lib/utils";
 import type { Subtitle } from "@/types/subtitle";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useWavesurfer } from "@wavesurfer/react";
 import {
   type ForwardedRef,
@@ -18,7 +19,6 @@ import RegionsPlugin, {
   type Region,
 } from "wavesurfer.js/dist/plugins/regions.esm.js";
 import Timeline from "wavesurfer.js/dist/plugins/timeline.esm.js";
-import { IconLoader2 } from "@tabler/icons-react";
 
 const HANDLE_COLOR = "#f59e0b";
 const REGION_COLOR = "#fcd34d40";

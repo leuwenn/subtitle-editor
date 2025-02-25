@@ -11,7 +11,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -32,7 +31,10 @@ interface FindReplaceProps {
   setSubtitles: (subtitles: Subtitle[]) => void;
 }
 
-export function FindReplace({ subtitles, setSubtitles }: FindReplaceProps) {
+export default function FindReplace({
+  subtitles,
+  setSubtitles,
+}: FindReplaceProps) {
   const [findText, setFindText] = useState("");
   const [replaceText, setReplaceText] = useState("");
   const [isCaseSensitive, setIsCaseSensitive] = useState(false);

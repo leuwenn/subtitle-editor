@@ -28,7 +28,7 @@ interface SubtitleListProps {
   setPlaybackTime: (time: number) => void;
 }
 
-export function SubtitleList({
+export default function SubtitleList({
   subtitles,
   currentTime = 0,
   onScrollToRegion,

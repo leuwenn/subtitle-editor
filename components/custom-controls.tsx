@@ -27,7 +27,7 @@ interface CustomControlsProps {
   onChangePlaybackRate: (rate: string) => void;
 }
 
-export function CustomControls({
+export default function CustomControls({
   isPlaying,
   playbackTime,
   duration,

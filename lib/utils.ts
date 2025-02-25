@@ -1,6 +1,6 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
 import type { Subtitle } from "@/types/subtitle";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -27,17 +27,17 @@ export const secondsToTime = (seconds: number): string => {
 };
 
 // If you store your subtitles in an array, you might do something like:
-export function subtitlesToSrtString(subtitles: Subtitle[]): string {
+export const subtitlesToSrtString = (subtitles: Subtitle[]): string => {
   return subtitles
     .map((sub) => `${sub.startTime} --> ${sub.endTime}\n${sub.text}\n`)
     .join("\n");
-}
+};
 
-export function srtToVtt(srtString: string): string {
+export const srtToVtt = (srtString: string): string => {
   return `WEBVTT\n\n${srtString
     .replace(/(\d\d:\d\d:\d\d),(\d\d\d)/g, "$1.$2")
     .replace(/(\r?\n\r?\n)/g, "\n")}`;
-}
+};
 
 // Function to validate time format
 export const isValidTime = (time: string): boolean => {

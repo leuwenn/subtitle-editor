@@ -1,6 +1,8 @@
 "use client";
 
-import { SubtitleList } from "@/components/subtitle-list";
+import CustomControls from "@/components/custom-controls";
+import FindReplace from "@/components/find-replace";
+import SubtitleList from "@/components/subtitle-list";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,12 +16,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { VideoPlayer } from "@/components/video-player";
-import { parseSRT } from "@/lib/srtParser";
+import VideoPlayer from "@/components/video-player";
 import {
   addSubtitle,
   deleteSubtitle,
   mergeSubtitles,
+  parseSRT,
   splitSubtitle,
   updateSubtitle,
   updateSubtitleEndTime,
@@ -31,12 +33,10 @@ import {
   QuestionMarkCircledIcon,
   VideoIcon,
 } from "@radix-ui/react-icons";
+import { IconBadgeCc } from "@tabler/icons-react";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { IconBadgeCc, IconSearch } from "@tabler/icons-react";
-import { FindReplace } from "@/components/find-replace";
-import { CustomControls } from "@/components/custom-controls";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const WaveformVisualizer = dynamic(
   () => import("@/components/waveform-visualizer"),

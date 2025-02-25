@@ -20,7 +20,7 @@ interface VideoPlayerProps {
   playbackRate: number;
 }
 
-export function VideoPlayer({
+export default function VideoPlayer({
   mediaFile,
   subtitles,
   setMediaFile,
@@ -56,7 +56,7 @@ export function VideoPlayer({
     }
   }, [seekTime]);
 
-  // Handle play/pause with debounce
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Handle play/pause with debounce
   useEffect(() => {
     const now = Date.now();
     if (now - lastPlayStateChange.current < DEBOUNCE_TIME) {
