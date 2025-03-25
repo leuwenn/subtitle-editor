@@ -323,8 +323,9 @@ export default function SubtitleList({
                 {/* Delete button */}
                 <Tooltip>
                   <TooltipTrigger
+                    type="button"
                     onClick={() => onDeleteSubtitle(subtitle.id)}
-                    className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded"
+                    className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded cursor-pointer"
                   >
                     <IconTrash size={12} />
                   </TooltipTrigger>
@@ -342,7 +343,7 @@ export default function SubtitleList({
                     onClick={() =>
                       onMergeSubtitles(subtitle.id, subtitles[index + 1].id)
                     }
-                    className="px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded"
+                    className="px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded cursor-pointer"
                   >
                     <IconFold size={12} />
                   </TooltipTrigger>
@@ -363,7 +364,7 @@ export default function SubtitleList({
                         : null
                     )
                   }
-                  className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded"
+                  className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded cursor-pointer"
                 >
                   <IconPlus size={12} />
                 </TooltipTrigger>
