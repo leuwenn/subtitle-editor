@@ -121,6 +121,7 @@ export default function VideoPlayer({
   return (
     <div className="w-full h-full flex items-center justify-center bg-black overflow-hidden">
       <ReactPlayer
+        key={vttUrl}
         ref={playerRef}
         url={mediaUrl}
         width="100%"
