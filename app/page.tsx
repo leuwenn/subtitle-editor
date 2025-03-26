@@ -33,6 +33,7 @@ import {
   QuestionMarkCircledIcon,
   VideoIcon,
 } from "@radix-ui/react-icons";
+import { useUndoableState } from "@/hooks/use-undoable-state"; // Import the hook
 import { IconBadgeCc } from "@tabler/icons-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -52,7 +53,16 @@ interface WaveformRef {
 export default function Home() {
   const waveformRef = useRef<WaveformRef>(null);
 
-  const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
+  // Replace useState with useUndoableState for subtitles
+  const [
+    subtitles,
+    setSubtitlesWithHistory,
+    undoSubtitles,
+    redoSubtitles,
+    canUndoSubtitles,
+    canRedoSubtitles,
+  ] = useUndoableState<Subtitle[]>([]);
+
   const [srtFileName, setSrtFileName] = useState<string>("subtitles.srt");
   const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
   const [pendingSrtFile, setPendingSrtFile] = useState<File | null>(null);
@@ -69,7 +79,8 @@ export default function Home() {
     setSrtFileName(file.name);
     const text = await file.text();
     const parsedSubtitles = parseSRT(text);
-    setSubtitles(parsedSubtitles);
+    // Use the undoable state setter (resets history when loading a new file)
+    setSubtitlesWithHistory(parsedSubtitles);
   };
 
   const handleSrtFileSelect = async (
@@ -107,20 +118,73 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
-  // Use useCallback to memoize onDeleteSubtitle
-  const onDeleteSubtitle = useCallback((id: number) => {
-    setSubtitles((prevSubtitles) => deleteSubtitle(prevSubtitles, id));
-  }, []);
+  // --- Subtitle Modification Callbacks using Undoable State ---
 
-  const handleSplitSubtitle = (
-    id: number,
-    caretPos: number,
-    textLength: number
-  ) => {
-    setSubtitles((prev) => {
-      return splitSubtitle(prev, id, caretPos, textLength);
-    });
-  };
+  // Handle operations that return a reducer function: (prevState) => newState
+  const handleUpdateSubtitleStartTime = useCallback(
+    (id: number, newTime: string) => {
+      setSubtitlesWithHistory(updateSubtitleStartTime(id, newTime));
+    },
+    [setSubtitlesWithHistory]
+  );
+
+  const handleUpdateSubtitleEndTime = useCallback(
+    (id: number, newTime: string) => {
+      setSubtitlesWithHistory(updateSubtitleEndTime(id, newTime));
+    },
+    [setSubtitlesWithHistory]
+  );
+
+  // Handle operations that return the new state directly: newState
+  const handleUpdateSubtitleText = useCallback(
+    (id: number, newText: string) => {
+      setSubtitlesWithHistory((prev) => updateSubtitle(prev, id, newText));
+    },
+    [setSubtitlesWithHistory]
+  );
+
+  const handleMergeSubtitles = useCallback(
+    (id1: number, id2: number) => {
+      setSubtitlesWithHistory((prev) => mergeSubtitles(prev, id1, id2));
+    },
+    [setSubtitlesWithHistory]
+  );
+
+  const handleAddSubtitle = useCallback(
+    (beforeId: number, afterId: number | null) => {
+      setSubtitlesWithHistory((prev) => addSubtitle(prev, beforeId, afterId));
+    },
+    [setSubtitlesWithHistory]
+  );
+
+  const onDeleteSubtitle = useCallback(
+    (id: number) => {
+      setSubtitlesWithHistory((prev) => deleteSubtitle(prev, id));
+    },
+    [setSubtitlesWithHistory]
+  );
+
+  const handleSplitSubtitle = useCallback(
+    (id: number, caretPos: number, textLength: number) => {
+      setSubtitlesWithHistory((prev) =>
+        splitSubtitle(prev, id, caretPos, textLength)
+      );
+    },
+    [setSubtitlesWithHistory]
+  );
+
+  // Handle direct state update (like from WaveformVisualizer drag)
+  const handleUpdateSubtitleTiming = useCallback(
+    (id: number, startTime: string, endTime: string) => {
+      setSubtitlesWithHistory((subs) =>
+        subs.map((sub) =>
+          sub.id === id ? { ...sub, startTime, endTime } : sub
+        )
+      );
+    },
+    [setSubtitlesWithHistory]
+  );
+  // --- End Subtitle Modification Callbacks ---
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -154,7 +218,38 @@ export default function Home() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isPlaying]);
+  }, [isPlaying]); // Keep this dependency for play/pause
+
+  // Effect for Undo/Redo keyboard shortcuts
+  useEffect(() => {
+    const handleUndoRedo = (event: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      const modKey = isMac ? event.metaKey : event.ctrlKey;
+
+      // Check for Cmd/Ctrl + Z for Undo
+      if (modKey && !event.shiftKey && event.key.toLowerCase() === "z") {
+        // Prevent default browser/input undo behavior only if we can undo
+        if (canUndoSubtitles) {
+          event.preventDefault();
+          undoSubtitles();
+        }
+      }
+      // Check for Cmd/Ctrl + Shift + Z for Redo
+      else if (modKey && event.shiftKey && event.key.toLowerCase() === "z") {
+        // Prevent default browser redo behavior only if we can redo
+        if (canRedoSubtitles) {
+          event.preventDefault();
+          redoSubtitles();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleUndoRedo);
+    return () => {
+      window.removeEventListener("keydown", handleUndoRedo);
+    };
+    // Dependencies include the undo/redo functions and their possibility flags
+  }, [undoSubtitles, redoSubtitles, canUndoSubtitles, canRedoSubtitles]);
 
   return (
     <div className="flex flex-col h-screen">
@@ -166,7 +261,11 @@ export default function Home() {
               <QuestionMarkCircledIcon />
             </Button>
           </Link>
-          <FindReplace subtitles={subtitles} setSubtitles={setSubtitles} />
+          {/* Pass the undoable state setter to FindReplace */}
+          <FindReplace
+            subtitles={subtitles}
+            setSubtitles={setSubtitlesWithHistory}
+          />
 
           <Label className="cursor-pointer">
             <Input
@@ -240,24 +339,13 @@ export default function Home() {
                       waveformRef.current.scrollToRegion(id);
                     }
                   }}
-                  onUpdateSubtitleStartTime={(id: number, newTime: string) => {
-                    setSubtitles(updateSubtitleStartTime(id, newTime));
-                  }}
-                  onUpdateSubtitleEndTime={(id: number, newTime: string) => {
-                    setSubtitles(updateSubtitleEndTime(id, newTime));
-                  }}
-                  onUpdateSubtitle={(id: number, newText: string) => {
-                    setSubtitles(updateSubtitle(subtitles, id, newText));
-                  }}
-                  onMergeSubtitles={(id1: number, id2: number) => {
-                    setSubtitles(mergeSubtitles(subtitles, id1, id2));
-                  }}
-                  onAddSubtitle={(beforeId: number, afterId: number | null) => {
-                    setSubtitles(addSubtitle(subtitles, beforeId, afterId));
-                  }}
-                  onDeleteSubtitle={(id: number) => {
-                    setSubtitles(deleteSubtitle(subtitles, id));
-                  }}
+                  // Pass the new memoized callbacks that use setSubtitlesWithHistory
+                  onUpdateSubtitleStartTime={handleUpdateSubtitleStartTime}
+                  onUpdateSubtitleEndTime={handleUpdateSubtitleEndTime}
+                  onUpdateSubtitle={handleUpdateSubtitleText}
+                  onMergeSubtitles={handleMergeSubtitles}
+                  onAddSubtitle={handleAddSubtitle}
+                  onDeleteSubtitle={onDeleteSubtitle}
                   onSplitSubtitle={handleSplitSubtitle}
                   setIsPlaying={setIsPlaying}
                   setPlaybackTime={setPlaybackTime}
@@ -281,7 +369,8 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() =>
-                      setSubtitles([
+                      // Use the undoable state setter for starting from scratch
+                      setSubtitlesWithHistory([
                         {
                           id: 1,
                           startTime: "00:00:00,000",
@@ -341,16 +430,9 @@ export default function Home() {
                 subtitles={subtitles}
                 onSeek={setPlaybackTime}
                 onPlayPause={setIsPlaying}
-                onUpdateSubtitleTiming={(id, startTime, endTime) => {
-                  setSubtitles((subs) =>
-                    subs.map((sub) =>
-                      sub.id === id ? { ...sub, startTime, endTime } : sub
-                    )
-                  );
-                }}
-                onUpdateSubtitleText={(id: number, newText: string) => {
-                  setSubtitles(updateSubtitle(subtitles, id, newText));
-                }}
+                // Pass the new memoized callbacks that use setSubtitlesWithHistory
+                onUpdateSubtitleTiming={handleUpdateSubtitleTiming}
+                onUpdateSubtitleText={handleUpdateSubtitleText}
                 onDeleteSubtitle={onDeleteSubtitle}
               />
             </>

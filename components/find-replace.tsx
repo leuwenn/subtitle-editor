@@ -28,7 +28,10 @@ import { escapeRegExp } from "@/lib/utils";
 
 interface FindReplaceProps {
   subtitles: Subtitle[];
-  setSubtitles: (subtitles: Subtitle[]) => void;
+  // Update the type to match the setter from useUndoableState
+  setSubtitles: (
+    action: Subtitle[] | ((prevState: Subtitle[]) => Subtitle[])
+  ) => void;
 }
 
 export default function FindReplace({
@@ -71,9 +74,13 @@ export default function FindReplace({
       return subtitle;
     });
 
+    // Pass the updated array directly to the setter
     setSubtitles(updatedSubtitles);
+    // Update local state for matched subtitles based on the *newly* updated subtitles
     setMatchedSubtitles(
-      updatedSubtitles.filter((subtitle) => findRegex.test(subtitle.text))
+      updatedSubtitles.filter(
+        (subtitle) => selectedSubtitles.has(subtitle.id) && findRegex.test(subtitle.text)
+      )
     );
     // Don't close the dialog automatically
     // setIsDialogOpen(false);
