@@ -74,18 +74,41 @@ export default function VideoPlayer({
   }, [mediaFile]);
 
   useEffect(() => {
-    // Generate or “export” your current subtitles as an SRT string
+    // 1) Convert subtitles to a fresh .vtt Blob URL
     const srtString = subtitlesToSrtString(subtitles);
-    // Convert SRT → WebVTT
     const vttString = srtToVtt(srtString);
-
-    // Create a Blob
     const blob = new Blob([vttString], { type: "text/vtt" });
     const url = URL.createObjectURL(blob);
     setVttUrl(url);
 
+    // 2) Force the DOM to use a fresh <track src="...">
+    const videoEl = playerRef.current?.getInternalPlayer();
+
+    // Only do this if we're in the HTML5 player (ReactPlayer returns an <HTMLVideoElement>)
+    if (videoEl && videoEl.tagName === "VIDEO") {
+      // Remove all old <track> elements
+      const existingTracks = videoEl.getElementsByTagName("track");
+      while (existingTracks.length > 0) {
+        existingTracks[0].remove();
+      }
+
+      // Create a new <track> element and append it
+      const newTrack = document.createElement("track");
+      newTrack.kind = "subtitles";
+      newTrack.label = "Subtitles";
+      newTrack.srclang = "en";
+      newTrack.src = url;
+      newTrack.default = true;
+
+      // Wait for the track to load, then show it
+      newTrack.addEventListener("load", () => {
+        newTrack.track.mode = "showing";
+      });
+
+      videoEl.appendChild(newTrack);
+    }
+
     return () => {
-      // cleanup
       URL.revokeObjectURL(url);
     };
   }, [subtitles]);
@@ -121,7 +144,6 @@ export default function VideoPlayer({
   return (
     <div className="w-full h-full flex items-center justify-center bg-black overflow-hidden">
       <ReactPlayer
-        key={vttUrl}
         ref={playerRef}
         url={mediaUrl}
         width="100%"
