@@ -444,6 +444,7 @@ export default forwardRef(function WaveformVisualizer(
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: Avoid infinite rendering regions
   useEffect(() => {
+    if (!wavesurfer || isLoading) return;
     // When subtitles change, update the regions
     initRegions();
   }, [subtitles.length, initRegions]);
