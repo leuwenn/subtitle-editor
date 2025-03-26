@@ -257,7 +257,7 @@ export default function Home() {
         <h1 className="text-lg font-semibold">Subtitle Editor</h1>
         <div className="flex gap-4 items-center">
           <Link href="/faq" target="_blank">
-            <Button variant="ghost">
+            <Button variant="ghost" className="cursor-pointer">
               <QuestionMarkCircledIcon />
             </Button>
           </Link>
@@ -288,7 +288,7 @@ export default function Home() {
               onClick={() => {
                 document.getElementById("media-file-input")?.click();
               }}
-              className="bg-cyan-300 hover:bg-cyan-500 hover:text-white text-black rounded-sm"
+              className="bg-cyan-300 hover:bg-cyan-500 hover:text-white text-black rounded-sm cursor-pointer"
             >
               <VideoIcon />
               <span className="max-w-36 flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-left">
@@ -309,14 +309,18 @@ export default function Home() {
               onClick={() => {
                 document.getElementById("srt-file-input")?.click();
               }}
-              className="hover:bg-amber-500 hover:text-white bg-amber-300 text-black rounded-sm"
+              className="hover:bg-amber-500 hover:text-white bg-amber-300 text-black rounded-sm cursor-pointer"
             >
               <IconBadgeCc />
               Load SRT
             </Button>
           </Label>
 
-          <Button onClick={downloadSRT} disabled={subtitles.length === 0}>
+          <Button
+            onClick={downloadSRT}
+            disabled={subtitles.length === 0}
+            className="cursor-pointer"
+          >
             <DownloadIcon />
             Save SRT
           </Button>
@@ -351,7 +355,7 @@ export default function Home() {
                   setPlaybackTime={setPlaybackTime}
                 />
               ) : (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground rounded-sm">
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground rounded-sm cursor-pointer">
                   <Label className="cursor-pointer text-xl hover:text-blue-500 underline">
                     Upload an SRT file
                     <Input

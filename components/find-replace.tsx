@@ -79,7 +79,8 @@ export default function FindReplace({
     // Update local state for matched subtitles based on the *newly* updated subtitles
     setMatchedSubtitles(
       updatedSubtitles.filter(
-        (subtitle) => selectedSubtitles.has(subtitle.id) && findRegex.test(subtitle.text)
+        (subtitle) =>
+          selectedSubtitles.has(subtitle.id) && findRegex.test(subtitle.text)
       )
     );
     // Don't close the dialog automatically
@@ -161,7 +162,10 @@ export default function FindReplace({
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="border-black rounded-none">
+        <Button
+          variant="outline"
+          className="border-black rounded-none cursor-pointer"
+        >
           <IconSearch />
           Find / Replace
         </Button>
@@ -343,7 +347,9 @@ export default function FindReplace({
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleReplace}>Replace</Button>
+          <Button className="cursor-pointer" onClick={handleReplace}>
+            Replace
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
