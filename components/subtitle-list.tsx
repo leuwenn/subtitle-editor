@@ -137,7 +137,6 @@ export default function SubtitleList({
               onClick={() => onScrollToRegion(subtitle.id)}
               onFocus={() => {
                 setPlaybackTime(timeToSeconds(subtitle.startTime));
-                // setIsPlaying(true); // Removed from onFocus
               }}
               onKeyDown={(e) => {
                 if (e.key === "Tab") {
@@ -149,7 +148,7 @@ export default function SubtitleList({
               className={`px-4 py-2 border-t border-gray-800 hover:bg-amber-50 cursor-pointer grid grid-cols-[1rem_7rem_1fr] gap-4 items-center ${
                 timeToSeconds(subtitle.startTime) <= currentTime &&
                 timeToSeconds(subtitle.endTime) >= currentTime
-                  ? "bg-secondary"
+                  ? "bg-cyan-50"
                   : ""
               }`}
             >
@@ -327,15 +326,17 @@ export default function SubtitleList({
                     onClick={() => onDeleteSubtitle(subtitle.id)}
                     className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded cursor-pointer"
                   >
-                    <IconTrash size={12} />
+                    <IconTrash size={16} />
                   </TooltipTrigger>
-                  <TooltipContent className="bg-red-600">Delete</TooltipContent>
+                  <TooltipContent className="bg-red-600 px-2 py-1 text-sm">
+                    Delete
+                  </TooltipContent>
                 </Tooltip>
               </div>
             </div>
 
             {/* Merge and add button */}
-            <div className="flex justify-center gap-12 -mt-3 -mb-3">
+            <div className="flex justify-center gap-16 -mt-3 -mb-3">
               {index < subtitles.length - 1 && (
                 <Tooltip>
                   <TooltipTrigger
@@ -345,9 +346,9 @@ export default function SubtitleList({
                     }
                     className="px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded cursor-pointer"
                   >
-                    <IconFold size={12} />
+                    <IconFold size={16} />
                   </TooltipTrigger>
-                  <TooltipContent className="bg-yellow-500">
+                  <TooltipContent className="bg-amber-500 px-2 py-1 text-sm">
                     Merge
                   </TooltipContent>
                 </Tooltip>
@@ -364,11 +365,13 @@ export default function SubtitleList({
                         : null
                     )
                   }
-                  className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded cursor-pointer"
+                  className="px-2 py-1 text-sm bg-green-100 hover:bg-green-200 text-green-700 rounded cursor-pointer"
                 >
-                  <IconPlus size={12} />
+                  <IconPlus size={16} />
                 </TooltipTrigger>
-                <TooltipContent className="bg-green-500">Add</TooltipContent>
+                <TooltipContent className="bg-green-500 px-2 py-1 text-sm">
+                  Add
+                </TooltipContent>
               </Tooltip>
             </div>
           </div>

@@ -58,7 +58,7 @@ export default function CustomControls({
   }, []);
 
   return (
-    <div className="p-4 flex items-center gap-4 h-[6vh] border-t-2 border-black">
+    <div className="p-4 flex items-center gap-4 h-[6vh] border-t-2 border-b-2 border-black">
       <Button onClick={onPlayPause} variant="ghost">
         {isPlaying ? <PauseIcon /> : <PlayIcon />}
       </Button>
