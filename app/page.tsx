@@ -41,7 +41,7 @@ import {
 } from "@tabler/icons-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const WaveformVisualizer = dynamic(
   () => import("@/components/waveform-visualizer"),

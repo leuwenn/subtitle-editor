@@ -327,14 +327,6 @@ export default forwardRef(function WaveformVisualizer(
   const lastKeyPress = useRef(0);
   const DEBOUNCE_TIME = 200; // 200ms debounce
 
-  // Hitting space key should play/pause the media
-  const handlePlayPause = () => {
-    const now = Date.now();
-    if (now - lastKeyPress.current < DEBOUNCE_TIME) return;
-    lastKeyPress.current = now;
-    onPlayPause(!isPlaying);
-  };
-
   useEffect(() => {
     const container = containerRef.current;
 
@@ -342,19 +334,29 @@ export default forwardRef(function WaveformVisualizer(
       if (e.code === "Space") {
         e.preventDefault();
         e.stopPropagation(); // Stop the event from bubbling up
-        handlePlayPause();
+
+        // Debounce logic moved inside
+        const now = Date.now();
+        if (now - lastKeyPress.current < DEBOUNCE_TIME) return;
+        lastKeyPress.current = now;
+
+        onPlayPause(!isPlaying); // Call prop directly
       }
     };
 
     if (container) {
+      // Make container focusable to receive keydown events
+      container.setAttribute("tabindex", "0");
       container.addEventListener("keydown", handleKeyDown);
     }
     return () => {
       if (container) {
         container.removeEventListener("keydown", handleKeyDown);
+        // Clean up tabindex attribute
+        container.removeAttribute("tabindex");
       }
     };
-  }, [handlePlayPause]);
+  }, [isPlaying, onPlayPause]); // Depend on isPlaying and onPlayPause
 
   // Play/pause the waveform
   useEffect(() => {
@@ -443,7 +445,7 @@ export default forwardRef(function WaveformVisualizer(
     if (!wavesurfer || isLoading) return;
     // When subtitles change, update the regions
     initRegions();
-  }, [subtitles.length, initRegions]);
+  }, [subtitles.length]);
 
   // If subtitle time stamps change, update the regions
   // biome-ignore lint/correctness/useExhaustiveDependencies: For unknown reasons, if I include `onPlayPause` in the dependencies, the regions are not rendered at all.
@@ -602,7 +604,7 @@ export default forwardRef(function WaveformVisualizer(
         regionsPlugin.un("region-updated", handleRegionUpdate);
       }
     };
-  }, [wavesurfer, subtitles, onUpdateSubtitleTiming, initRegions]);
+  }, [wavesurfer, subtitles, onUpdateSubtitleTiming]);
 
   // Update subtitle text requires only updating the target region content
   useEffect(() => {
@@ -625,14 +627,10 @@ export default forwardRef(function WaveformVisualizer(
 
   return (
     <div className="relative w-full h-full border-black">
-      <div
-        ref={containerRef}
-        className="w-full h-full"
-        role="button"
-        tabIndex={0}
-      />
+      <div ref={containerRef} className="w-full h-full" />
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center bg-white/50">
+          {/* Added subtle background */}
           <IconLoader2 className="text-3xl text-black animate-spin" />
         </div>
       )}
