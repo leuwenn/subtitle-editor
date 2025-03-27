@@ -125,69 +125,51 @@ export default function Home() {
   // --- Subtitle Modification Callbacks using Undoable State ---
 
   // Handle operations that return a reducer function: (prevState) => newState
-  const handleUpdateSubtitleStartTime = useCallback(
-    (id: number, newTime: string) => {
-      setSubtitlesWithHistory(updateSubtitleStartTime(id, newTime));
-    },
-    [setSubtitlesWithHistory]
-  );
+  const handleUpdateSubtitleStartTime = (id: number, newTime: string) => {
+    setSubtitlesWithHistory(updateSubtitleStartTime(id, newTime));
+  };
 
-  const handleUpdateSubtitleEndTime = useCallback(
-    (id: number, newTime: string) => {
-      setSubtitlesWithHistory(updateSubtitleEndTime(id, newTime));
-    },
-    [setSubtitlesWithHistory]
-  );
+  const handleUpdateSubtitleEndTime = (id: number, newTime: string) => {
+    setSubtitlesWithHistory(updateSubtitleEndTime(id, newTime));
+  };
 
   // Handle operations that return the new state directly: newState
-  const handleUpdateSubtitleText = useCallback(
-    (id: number, newText: string) => {
-      setSubtitlesWithHistory((prev) => updateSubtitle(prev, id, newText));
-    },
-    [setSubtitlesWithHistory]
-  );
+  const handleUpdateSubtitleText = (id: number, newText: string) => {
+    setSubtitlesWithHistory((prev) => updateSubtitle(prev, id, newText));
+  };
 
-  const handleMergeSubtitles = useCallback(
-    (id1: number, id2: number) => {
-      setSubtitlesWithHistory((prev) => mergeSubtitles(prev, id1, id2));
-    },
-    [setSubtitlesWithHistory]
-  );
+  const handleMergeSubtitles = (id1: number, id2: number) => {
+    setSubtitlesWithHistory((prev) => mergeSubtitles(prev, id1, id2));
+  };
 
-  const handleAddSubtitle = useCallback(
-    (beforeId: number, afterId: number | null) => {
-      setSubtitlesWithHistory((prev) => addSubtitle(prev, beforeId, afterId));
-    },
-    [setSubtitlesWithHistory]
-  );
+  const handleAddSubtitle = (beforeId: number, afterId: number | null) => {
+    setSubtitlesWithHistory((prev) => addSubtitle(prev, beforeId, afterId));
+  };
 
-  const onDeleteSubtitle = useCallback(
-    (id: number) => {
-      setSubtitlesWithHistory((prev) => deleteSubtitle(prev, id));
-    },
-    [setSubtitlesWithHistory]
-  );
+  const onDeleteSubtitle = (id: number) => {
+    setSubtitlesWithHistory((prev) => deleteSubtitle(prev, id));
+  };
 
-  const handleSplitSubtitle = useCallback(
-    (id: number, caretPos: number, textLength: number) => {
-      setSubtitlesWithHistory((prev) =>
-        splitSubtitle(prev, id, caretPos, textLength)
-      );
-    },
-    [setSubtitlesWithHistory]
-  );
+  const handleSplitSubtitle = (
+    id: number,
+    caretPos: number,
+    textLength: number
+  ) => {
+    setSubtitlesWithHistory((prev) =>
+      splitSubtitle(prev, id, caretPos, textLength)
+    );
+  };
 
   // Handle direct state update (like from WaveformVisualizer drag)
-  const handleUpdateSubtitleTiming = useCallback(
-    (id: number, startTime: string, endTime: string) => {
-      setSubtitlesWithHistory((subs) =>
-        subs.map((sub) =>
-          sub.id === id ? { ...sub, startTime, endTime } : sub
-        )
-      );
-    },
-    [setSubtitlesWithHistory]
-  );
+  const handleUpdateSubtitleTiming = (
+    id: number,
+    startTime: string,
+    endTime: string
+  ) => {
+    setSubtitlesWithHistory((subs) =>
+      subs.map((sub) => (sub.id === id ? { ...sub, startTime, endTime } : sub))
+    );
+  };
   // --- End Subtitle Modification Callbacks ---
 
   useEffect(() => {

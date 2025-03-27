@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 
 interface History<T> {
   past: T[];
@@ -28,7 +28,7 @@ export function useUndoableState<T>(
   () => void,
   () => void,
   boolean,
-  boolean,
+  boolean
 ] {
   const [history, setHistory] = useState<History<T>>({
     past: [],
@@ -40,7 +40,7 @@ export function useUndoableState<T>(
   const canRedo = history.future.length > 0;
 
   // State setter function that updates history
-  const setState = useCallback((action: SetStateAction<T>) => {
+  const setState = (action: SetStateAction<T>) => {
     setHistory((currentHistory) => {
       const previousPresent = currentHistory.present;
       // Calculate the new present state based on the action
@@ -65,10 +65,10 @@ export function useUndoableState<T>(
         future: [], // Clear future history on new state change
       };
     });
-  }, []);
+  };
 
   // Undo function
-  const undo = useCallback(() => {
+  const undo = () => {
     if (!canUndo) return; // Do nothing if there's no past state
 
     setHistory((currentHistory) => {
@@ -83,10 +83,10 @@ export function useUndoableState<T>(
         future: newFuture,
       };
     });
-  }, [canUndo]);
+  };
 
   // Redo function
-  const redo = useCallback(() => {
+  const redo = () => {
     if (!canRedo) return; // Do nothing if there's no future state
 
     setHistory((currentHistory) => {
@@ -101,7 +101,7 @@ export function useUndoableState<T>(
         future: newFuture,
       };
     });
-  }, [canRedo]);
+  };
 
   // Return the state, setter, undo/redo functions, and flags
   return [history.present, setState, undo, redo, canUndo, canRedo];

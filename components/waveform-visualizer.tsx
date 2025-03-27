@@ -7,7 +7,6 @@ import { useWavesurfer } from "@wavesurfer/react";
 import {
   type ForwardedRef,
   forwardRef,
-  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -227,24 +226,21 @@ export default forwardRef(function WaveformVisualizer(
    * Scrolling and zooming the waveform
    */
 
-  const scrollToRegion = useCallback(
-    (id: number) => {
-      if (!wavesurfer) return;
-      const region = subtitleToRegionMap.current.get(id);
-      if (region) {
-        const duration = wavesurfer.getDuration();
-        const containerWidth = containerRef.current?.clientWidth || 0;
-        const pixelsPerSecond = containerWidth / duration;
-        const scrollPosition =
-          region.start * pixelsPerSecond - containerWidth / 2;
-        wavesurfer.setScroll(Math.max(0, scrollPosition));
-        // Also seek to this position
-        wavesurfer.setTime(region.start);
-        onSeek(region.start);
-      }
-    },
-    [wavesurfer, onSeek]
-  );
+  const scrollToRegion = (id: number) => {
+    if (!wavesurfer) return;
+    const region = subtitleToRegionMap.current.get(id);
+    if (region) {
+      const duration = wavesurfer.getDuration();
+      const containerWidth = containerRef.current?.clientWidth || 0;
+      const pixelsPerSecond = containerWidth / duration;
+      const scrollPosition =
+        region.start * pixelsPerSecond - containerWidth / 2;
+      wavesurfer.setScroll(Math.max(0, scrollPosition));
+      // Also seek to this position
+      wavesurfer.setTime(region.start);
+      onSeek(region.start);
+    }
+  };
 
   // Expose scrollToRegion method via ref
   useImperativeHandle(ref, () => ({
@@ -332,12 +328,12 @@ export default forwardRef(function WaveformVisualizer(
   const DEBOUNCE_TIME = 200; // 200ms debounce
 
   // Hitting space key should play/pause the media
-  const handlePlayPause = useCallback(() => {
+  const handlePlayPause = () => {
     const now = Date.now();
     if (now - lastKeyPress.current < DEBOUNCE_TIME) return;
     lastKeyPress.current = now;
     onPlayPause(!isPlaying);
-  }, [isPlaying, onPlayPause]);
+  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -395,7 +391,7 @@ export default forwardRef(function WaveformVisualizer(
    * */
 
   // Initialize all regions from subtitles
-  const initRegions = useCallback(() => {
+  const initRegions = () => {
     if (!wavesurfer || wavesurfer.getDuration() === 0) return;
 
     // Grab the plugin by name in Wavesurfer v7
@@ -440,7 +436,7 @@ export default forwardRef(function WaveformVisualizer(
       // Save reference
       subtitleToRegionMap.current.set(subtitle.id, region);
     });
-  }, [wavesurfer, subtitles]);
+  };
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: Avoid infinite rendering regions
   useEffect(() => {

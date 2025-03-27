@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 import { secondsToTime } from "@/lib/utils";
 import { PauseIcon, PlayIcon } from "@radix-ui/react-icons";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { Slider } from "./ui/slider";
 
@@ -40,22 +40,19 @@ export default function CustomControls({
   const [tooltipPosition, setTooltipPosition] = useState<number>(0);
   const sliderRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (sliderRef.current) {
-        const rect = sliderRef.current.getBoundingClientRect();
-        const position = (e.clientX - rect.left) / rect.width;
-        const time = position * duration;
-        setHoverTime(time);
-        setTooltipPosition(e.clientX - 8 * rect.left);
-      }
-    },
-    [duration]
-  );
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (sliderRef.current) {
+      const rect = sliderRef.current.getBoundingClientRect();
+      const position = (e.clientX - rect.left) / rect.width;
+      const time = position * duration;
+      setHoverTime(time);
+      setTooltipPosition(e.clientX - 8 * rect.left);
+    }
+  };
 
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = () => {
     setHoverTime(null);
-  }, []);
+  };
 
   return (
     <div className="p-4 flex items-center gap-4 h-[6vh] border-t-2 border-b-2 border-black">
