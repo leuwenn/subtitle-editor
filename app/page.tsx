@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import VideoPlayer from "@/components/video-player";
+import { useUndoableState } from "@/hooks/use-undoable-state";
 import {
   addSubtitle,
   deleteSubtitle,
@@ -33,8 +34,11 @@ import {
   QuestionMarkCircledIcon,
   VideoIcon,
 } from "@radix-ui/react-icons";
-import { useUndoableState } from "@/hooks/use-undoable-state"; // Import the hook
-import { IconBadgeCc } from "@tabler/icons-react";
+import {
+  IconArrowBack,
+  IconArrowForward,
+  IconBadgeCc,
+} from "@tabler/icons-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -261,7 +265,27 @@ export default function Home() {
               <QuestionMarkCircledIcon />
             </Button>
           </Link>
-          {/* Pass the undoable state setter to FindReplace */}
+
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={!canUndoSubtitles}
+            onClick={undoSubtitles}
+            className="cursor-pointer"
+          >
+            <IconArrowBack />
+          </Button>
+
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={!canRedoSubtitles}
+            onClick={redoSubtitles}
+            className="cursor-pointer"
+          >
+            <IconArrowForward />
+          </Button>
+
           <FindReplace
             subtitles={subtitles}
             setSubtitles={setSubtitlesWithHistory}
@@ -442,7 +466,7 @@ export default function Home() {
             </>
           ) : (
             <div className="flex flex-col items-left text-lg  h-full text-gray-600 px-8 py-4 border-t-2 border-black">
-              <p className="my-4">After loading the media and subtitles:</p>
+              <p className="my-2">After loading the media and subtitles:</p>
               <ul className="list-disc list-inside">
                 <li>Click the subtitle text or time stamps to edit.</li>
                 <li>
@@ -453,6 +477,13 @@ export default function Home() {
                 <li>
                   Drag the dashed borders on the waveform to change the
                   subtitles' time stamps.
+                </li>
+                <li>
+                  Press <kbd>ctrl</kbd> + <kbd>z</kbd> (Windows) or{" "}
+                  <kbd>&#8984;</kbd> + <kbd>z</kbd> (Mac) to undo, and{" "}
+                  <kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>z</kbd> (Windows) or{" "}
+                  <kbd>&#8984;</kbd> + <kbd>shift</kbd> + <kbd>z</kbd> (Mac) to
+                  redo.
                 </li>
                 <li>
                   Remember to click "Save SRT" to save the subtitles after you
