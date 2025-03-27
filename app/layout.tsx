@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   title: "Subtitle Editor",
   description:
     "Free, open-sourced, fully-web srt editor. No account registration required.",
+  icons: "/badge-cc.svg", // Set the favicon
 };
 
 export default function RootLayout({
