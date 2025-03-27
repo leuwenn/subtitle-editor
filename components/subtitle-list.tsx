@@ -90,6 +90,7 @@ export default function SubtitleList({
       toast({
         title: "Invalid time format",
         description: "Please use the format HH:MM:SS,MS (e.g., 00:00:20,450).",
+        className: "border-0 bg-orange-200 text-red-700",
       });
       setEditingId(null);
       return;
@@ -106,6 +107,7 @@ export default function SubtitleList({
           title: "Invalid start time",
           description:
             "Start time cannot be later than the end time of the subtitle.",
+          className: "border-0 bg-orange-200 text-red-700",
         });
         setEditingId(null);
         return;
@@ -116,6 +118,7 @@ export default function SubtitleList({
           title: "Invalid end time",
           description:
             "End time cannot be earlier than the start time of the subtitle.",
+          className: "border-0 bg-orange-200 text-red-700",
         });
         setEditingId(null);
         return;
@@ -145,7 +148,7 @@ export default function SubtitleList({
                   setIsPlaying(true);
                 }
               }}
-              className={`px-4 py-2 border-t border-gray-800 hover:bg-amber-50 cursor-pointer grid grid-cols-[1rem_7rem_1fr] gap-4 items-center ${
+              className={`px-4 py-2 border-b border-gray-800 hover:bg-amber-50 cursor-pointer grid grid-cols-[1rem_7rem_1fr] gap-4 items-center ${
                 timeToSeconds(subtitle.startTime) <= currentTime &&
                 timeToSeconds(subtitle.endTime) >= currentTime
                   ? "bg-cyan-50"
@@ -200,7 +203,7 @@ export default function SubtitleList({
                       }
                     }}
                     variant="ghost"
-                    className="bg-transparent h-8"
+                    className="hover:bg-transparent h-8 cursor-pointer"
                   >
                     {subtitle.startTime}
                   </Button>
@@ -247,7 +250,7 @@ export default function SubtitleList({
                       }
                     }}
                     variant="ghost"
-                    className="bg-transparent h-8"
+                    className="hover:bg-transparent h-8 cursor-pointer"
                   >
                     {subtitle.endTime}
                   </Button>
@@ -301,7 +304,7 @@ export default function SubtitleList({
                   ) : (
                     <button
                       type="button"
-                      className="w-full text-left text-lg"
+                      className="w-full text-left text-lg cursor-pointer"
                       tabIndex={0}
                       onClick={() => {
                         setEditingTextId(subtitle.id);
@@ -314,7 +317,9 @@ export default function SubtitleList({
                         }
                       }}
                     >
-                      {subtitle.text}
+                      {subtitle.text || (
+                        <span className="text-muted-foreground">(Empty)</span>
+                      )}
                     </button>
                   )}
                 </div>
@@ -324,7 +329,7 @@ export default function SubtitleList({
                   <TooltipTrigger
                     type="button"
                     onClick={() => onDeleteSubtitle(subtitle.id)}
-                    className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded cursor-pointer"
+                    className="mx-4 my-auto px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded cursor-pointer"
                   >
                     <IconTrash size={16} />
                   </TooltipTrigger>
