@@ -1,12 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import type { Subtitle } from "@/types/subtitle";
-import { IconSearch } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
-
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -16,6 +10,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -25,6 +21,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { escapeRegExp } from "@/lib/utils";
+import type { Subtitle } from "@/types/subtitle";
+import { IconReplace, IconSearch } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 
 interface FindReplaceProps {
   subtitles: Subtitle[];
@@ -83,8 +82,6 @@ export default function FindReplace({
           selectedSubtitles.has(subtitle.id) && findRegex.test(subtitle.text)
       )
     );
-    // Don't close the dialog automatically
-    // setIsDialogOpen(false);
   };
 
   const highlightMatches = (text: string, findRegex: RegExp) => {
@@ -174,7 +171,7 @@ export default function FindReplace({
         <DialogHeader>
           <DialogTitle>Find and Replace</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-4 py-4">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <Label htmlFor="find">Find</Label>
             <Input
@@ -255,10 +252,10 @@ export default function FindReplace({
             />
           </div>
           <div className="text-sm text-gray-500">
-            {selectedSubtitles.size} selected
+            {selectedSubtitles.size} / {matchedSubtitles.length} selected
           </div>
           <div className="w-full max-h-[32rem] overflow-y-auto">
-            <Table className="w-full border-collapse table-fixed ">
+            <Table className="w-full border-collapse ">
               <TableHeader className="bg-gray-200 sticky top-0">
                 <TableRow className="border-black">
                   <TableHead className="sticky top-0 w-8 text-center text-black">
@@ -279,6 +276,9 @@ export default function FindReplace({
                         }
                       }}
                     />
+                  </TableHead>
+                  <TableHead className="sticky top-0 text-black w-fit">
+                    ID
                   </TableHead>
                   <TableHead className="sticky top-0 text-black">
                     Original
@@ -319,6 +319,9 @@ export default function FindReplace({
                             }}
                           />
                         </TableCell>
+                        <TableCell className="border-r-1 border-black">
+                          {subtitle.id}
+                        </TableCell>
                         <TableCell>
                           {highlightMatches(subtitle.text, findRegex)}
                         </TableCell>
@@ -348,6 +351,7 @@ export default function FindReplace({
         </div>
         <DialogFooter>
           <Button className="cursor-pointer" onClick={handleReplace}>
+            <IconReplace />
             Replace
           </Button>
         </DialogFooter>
