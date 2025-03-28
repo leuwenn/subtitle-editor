@@ -161,7 +161,7 @@ export default function SubtitleList({
               </div>
 
               {/* Subtitle start and end time */}
-              <div className="text-sm text-muted-foreground flex flex-col gap-1">
+              <div className="text-sm text-muted-foreground flex flex-col gap-0">
                 {editingStartTimeId === subtitle.id ? (
                   <Input
                     ref={(input) => {
@@ -187,7 +187,7 @@ export default function SubtitleList({
                         );
                       }
                     }}
-                    className="p-1 w-26 h-8 text-center text-black"
+                    className="p-0 w-26 h-8 text-center text-black"
                   />
                 ) : (
                   <Button
@@ -234,7 +234,7 @@ export default function SubtitleList({
                         );
                       }
                     }}
-                    className="p-1 w-26 h-8 text-center text-black"
+                    className="p-0 w-26 h-8 text-center text-black"
                   />
                 ) : (
                   <Button
@@ -299,7 +299,7 @@ export default function SubtitleList({
                           setEditingTextId(null);
                         }
                       }}
-                      className="w-full p-2"
+                      className="w-full px-2 h-4"
                     />
                   ) : (
                     <button

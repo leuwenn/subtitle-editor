@@ -9,7 +9,6 @@ import {
   forwardRef,
   useEffect,
   useImperativeHandle,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -166,61 +165,57 @@ export default forwardRef(function WaveformVisualizer(
     // do nothing
   };
 
-  const { wavesurfer } = useWavesurfer(
-    // biome-ignore lint/correctness/useExhaustiveDependencies: Avoid infinite re-rendering
-    useMemo(
-      () => ({
-        container: containerRef,
-        height: "auto",
-        waveColor: "#A7F3D0",
-        progressColor: "#00d4ff",
-        cursorColor: "#b91c1c",
-        url: mediaUrl,
-        minPxPerSec: 100, // Lower default minimum pixels per second
-        fillParent: true, // Start with fill parent true
-        autoCenter: true, // Enable auto center initially
-        backend: "MediaElement",
-        normalize: true,
-        interact: true,
-        hideScrollbar: false, // We'll handle scrolling manually
-        plugins: [
-          Timeline.create({
-            timeInterval: 0.1,
-            primaryLabelInterval: 1,
-            style: {
-              fontSize: "12px",
-            },
-          }),
-          Hover.create({
-            lineColor: "#ff0000",
-            lineWidth: 2,
-            labelBackground: "#555",
-            labelColor: "#fff",
-            labelSize: "12px",
-            formatTimeCallback: (seconds: number) => {
-              const hours = Math.floor(seconds / 3600);
-              const minutes = Math.floor((seconds % 3600) / 60);
-              const remainingSeconds = seconds % 60;
-              const milliseconds = Math.round(
-                (remainingSeconds - Math.floor(remainingSeconds)) * 1000
-              );
-
-              const paddedHours = String(hours).padStart(2, "0");
-              const paddedMinutes = String(minutes).padStart(2, "0");
-              const paddedSeconds = String(
-                Math.floor(remainingSeconds)
-              ).padStart(2, "0");
-              const paddedMilliseconds = String(milliseconds).padStart(3, "0");
-
-              return `${paddedHours}:${paddedMinutes}:${paddedSeconds},${paddedMilliseconds}`;
-            },
-          }),
-          regionPlugin,
-        ],
+  const { wavesurfer } = useWavesurfer({
+    // useMemo removed - React Compiler handles memoization
+    container: containerRef,
+    height: "auto",
+    waveColor: "#A7F3D0",
+    progressColor: "#00d4ff",
+    cursorColor: "#b91c1c",
+    url: mediaUrl,
+    minPxPerSec: 100, // Lower default minimum pixels per second
+    fillParent: true, // Start with fill parent true
+    autoCenter: true, // Enable auto center initially
+    backend: "MediaElement",
+    normalize: true,
+    interact: true,
+    hideScrollbar: false, // We'll handle scrolling manually
+    plugins: [
+      Timeline.create({
+        timeInterval: 0.1,
+        primaryLabelInterval: 1,
+        style: {
+          fontSize: "12px",
+        },
       }),
-      [mediaUrl]
-    )
-  );
+      Hover.create({
+        lineColor: "#ff0000",
+        lineWidth: 2,
+        labelBackground: "#555",
+        labelColor: "#fff",
+        labelSize: "12px",
+        formatTimeCallback: (seconds: number) => {
+          const hours = Math.floor(seconds / 3600);
+          const minutes = Math.floor((seconds % 3600) / 60);
+          const remainingSeconds = seconds % 60;
+          const milliseconds = Math.round(
+            (remainingSeconds - Math.floor(remainingSeconds)) * 1000
+          );
+
+          const paddedHours = String(hours).padStart(2, "0");
+          const paddedMinutes = String(minutes).padStart(2, "0");
+          const paddedSeconds = String(Math.floor(remainingSeconds)).padStart(
+            2,
+            "0"
+          );
+          const paddedMilliseconds = String(milliseconds).padStart(3, "0");
+
+          return `${paddedHours}:${paddedMinutes}:${paddedSeconds},${paddedMilliseconds}`;
+        },
+      }),
+      regionPlugin,
+    ],
+  });
 
   /****************************************************************
    * Scrolling and zooming the waveform
