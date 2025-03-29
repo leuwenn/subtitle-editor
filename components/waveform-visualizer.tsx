@@ -626,6 +626,19 @@ export default forwardRef(function WaveformVisualizer(
       // Get region by UUID
       const region = subtitleToRegionMap.current.get(subtitle.uuid);
       if (region?.element) {
+        // Update region's start and end times if they differ
+        const newStart = timeToSeconds(subtitle.startTime);
+        const newEnd = timeToSeconds(subtitle.endTime);
+
+        // Check if times actually changed before updating the region object
+        if (region.start !== newStart || region.end !== newEnd) {
+          region.setOptions({
+            start: newStart,
+            end: newEnd,
+          });
+        }
+
+        // Always update the displayed content (HTML)
         region.setOptions({
           content: getContentHtml(
             subtitle.startTime,

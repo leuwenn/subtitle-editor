@@ -161,7 +161,7 @@ export default function FindReplace({
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="border-black rounded-none cursor-pointer"
+          className="border-black rounded-xs cursor-pointer"
         >
           <IconSearch />
           Find / Replace
@@ -338,7 +338,7 @@ export default function FindReplace({
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={3}
+                      colSpan={4}
                       className="text-center text-gray-500 py-4"
                     >
                       No matches found
