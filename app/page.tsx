@@ -42,6 +42,7 @@ import {
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { v4 as uuidv4 } from "uuid"; // Import uuid
 
 const WaveformVisualizer = dynamic(
   () => import("@/components/waveform-visualizer"),
@@ -382,6 +383,7 @@ export default function Home() {
                       // Use the undoable state setter for starting from scratch
                       setSubtitlesWithHistory([
                         {
+                          uuid: uuidv4(), // Assign UUID
                           id: 1,
                           startTime: "00:00:00,000",
                           endTime: "00:00:03,000",

@@ -1,4 +1,5 @@
 import type { Subtitle } from "@/types/subtitle";
+import { v4 as uuidv4 } from "uuid";
 import { secondsToTime, timeToSeconds } from "./utils";
 
 const DEFAULT_SUBTITLE_DURATION = 3; // seconds
@@ -20,6 +21,7 @@ export const parseSRT = (srtContent: string): Subtitle[] => {
         const text = lines.slice(2).join("\n");
 
         subtitles.push({
+          uuid: uuidv4(), // Assign a unique ID on parse
           id,
           startTime,
           endTime,
@@ -75,10 +77,11 @@ export const mergeSubtitles = (
   const sub1 = subtitles.find((s) => s.id === id1);
   const sub2 = subtitles.find((s) => s.id === id2);
   if (!sub1 || !sub2) return subtitles;
-  if (sub1.id > sub2.id) return subtitles;
-
-  const mergedSubtitle = {
-    id: sub1.id,
+  // Keep the UUID of the first subtitle for the merged one
+  // Or generate a new one if preferred: uuid: uuidv4()
+  const mergedSubtitle: Subtitle = {
+    uuid: sub1.uuid, // Keep the first subtitle's UUID
+    id: sub1.id, // Will be reordered later
     startTime: sub1.startTime,
     endTime: sub2.endTime,
     text: `${sub1.text}${sub2.text}`,
@@ -113,7 +116,8 @@ export const addSubtitle = (
     const endTimeSeconds =
       timeToSeconds(beforeSub.endTime) + DEFAULT_SUBTITLE_DURATION;
     newSubtitle = {
-      id: beforeSub.id + 1,
+      uuid: uuidv4(), // Assign new UUID
+      id: beforeSub.id + 1, // Will be reordered later
       startTime: beforeSub.endTime,
       endTime: secondsToTime(endTimeSeconds),
       text: "New subtitle",
@@ -123,7 +127,8 @@ export const addSubtitle = (
     const afterSub = subtitles.find((s) => s.id === afterId);
     if (!afterSub) return subtitles;
     newSubtitle = {
-      id: beforeSub.id + 1,
+      uuid: uuidv4(), // Assign new UUID
+      id: beforeSub.id + 1, // Will be reordered later
       startTime: beforeSub.endTime,
       endTime: afterSub.startTime,
       text: "New subtitle",
@@ -175,17 +180,18 @@ export function splitSubtitle(
   const ratio = caretPos / textLength;
   const splitSec = oldStartSec + ratio * totalSec;
 
-  // Create first half
+  // Create first half - retains original UUID
   const first: Subtitle = {
-    ...sub,
+    ...sub, // Includes original uuid
     endTime: secondsToTime(splitSec),
     text: sub.text.slice(0, caretPos),
   };
 
-  // Create second half
+  // Create second half - gets a new UUID
   const second: Subtitle = {
-    ...sub,
-    id: sub.id + 1, // we'll reorder IDs anyway
+    ...sub, // Includes original uuid initially, but we overwrite it
+    uuid: uuidv4(), // Assign new UUID
+    id: sub.id + 1, // Will be reordered later
     startTime: secondsToTime(splitSec),
     text: sub.text.slice(caretPos),
   };
@@ -222,17 +228,17 @@ export function splitSubtitleByTime(
   const secondText = sub.text.slice(splitIndex).trim();
 
   // Create two new subtitles:
-  // 1) Original from startTime → splitTime
-  // 2) New from splitTime → endTime
+  // 1) Original from startTime → splitTime - retains original UUID
   const first: Subtitle = {
-    ...sub,
+    ...sub, // Includes original uuid
     endTime: secondsToTime(splitTimeSec),
     text: firstText || "New subtitle",
   };
 
-  // This is an easy way to ensure a unique ID. You can do something else if you prefer.
+  // 2) New from splitTime → endTime - gets a new UUID
   const second: Subtitle = {
-    id: sub.id + 1,
+    uuid: uuidv4(), // Assign new UUID
+    id: sub.id + 1, // Will be reordered later
     startTime: secondsToTime(splitTimeSec),
     endTime: sub.endTime,
     text: secondText || "New subtitle",
