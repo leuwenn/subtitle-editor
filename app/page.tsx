@@ -16,6 +16,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import VideoPlayer from "@/components/video-player";
 import { useUndoableState } from "@/hooks/use-undoable-state";
 import {
@@ -52,7 +58,7 @@ const WaveformVisualizer = dynamic(
 );
 
 interface WaveformRef {
-  scrollToRegion: (id: number) => void;
+  scrollToRegion: (uuid: string) => void; // Change id to uuid
 }
 
 export default function Home() {
@@ -248,26 +254,37 @@ export default function Home() {
               <QuestionMarkCircledIcon />
             </Button>
           </Link>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={!canUndoSubtitles}
+                  onClick={undoSubtitles}
+                  className="cursor-pointer"
+                >
+                  <IconArrowBack />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Undo</TooltipContent>
+            </Tooltip>
 
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={!canUndoSubtitles}
-            onClick={undoSubtitles}
-            className="cursor-pointer"
-          >
-            <IconArrowBack />
-          </Button>
-
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={!canRedoSubtitles}
-            onClick={redoSubtitles}
-            className="cursor-pointer"
-          >
-            <IconArrowForward />
-          </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={!canRedoSubtitles}
+                  onClick={redoSubtitles}
+                  className="cursor-pointer"
+                >
+                  <IconArrowForward />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Redo</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <FindReplace
             subtitles={subtitles}
@@ -345,9 +362,10 @@ export default function Home() {
                 <SubtitleList
                   subtitles={subtitles}
                   currentTime={playbackTime}
-                  onScrollToRegion={(id) => {
+                  // Expect uuid from SubtitleList and pass it to waveformRef
+                  onScrollToRegion={(uuid) => {
                     if (waveformRef.current) {
-                      waveformRef.current.scrollToRegion(id);
+                      waveformRef.current.scrollToRegion(uuid);
                     }
                   }}
                   // Pass the new memoized callbacks that use setSubtitlesWithHistory

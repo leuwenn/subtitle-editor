@@ -17,7 +17,7 @@ import {
 interface SubtitleListProps {
   subtitles: Subtitle[];
   currentTime?: number;
-  onScrollToRegion: (id: number) => void;
+  onScrollToRegion: (uuid: string) => void; // Change id to uuid
   onUpdateSubtitleStartTime: (id: number, newTime: string) => void;
   onUpdateSubtitleEndTime: (id: number, newTime: string) => void;
   onUpdateSubtitle: (id: number, newText: string) => void;
@@ -68,8 +68,9 @@ export default function SubtitleList({
     );
 
     if (currentSubtitle) {
+      // Use uuid for the element ID
       const subtitleElement = document.getElementById(
-        `subtitle-${currentSubtitle.id}`
+        `subtitle-${currentSubtitle.uuid}`
       );
       if (subtitleElement) {
         subtitleElement.scrollIntoView({
@@ -142,9 +143,11 @@ export default function SubtitleList({
               exit={{ opacity: 0, y: 0 }}
               transition={{ duration: 0.1 }}
             >
+              {/* Use uuid for the element ID */}
               <div
-                id={`${subtitle.id}`}
-                onClick={() => onScrollToRegion(subtitle.id)}
+                id={`subtitle-${subtitle.uuid}`}
+                // Pass uuid to the callback
+                onClick={() => onScrollToRegion(subtitle.uuid)}
                 onFocus={() => {
                   setPlaybackTime(timeToSeconds(subtitle.startTime));
                 }}

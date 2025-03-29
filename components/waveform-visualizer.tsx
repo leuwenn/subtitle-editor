@@ -134,14 +134,16 @@ export default forwardRef(function WaveformVisualizer(
     onPlayPause,
     onUpdateSubtitleTiming,
   }: WaveformVisualizerProps,
-  ref: ForwardedRef<{ scrollToRegion: (id: number) => void }>
+  // Update the ref type to expect uuid (string)
+  ref: ForwardedRef<{ scrollToRegion: (uuid: string) => void }>
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [mediaUrl, setMediaUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const subtitleToRegionMap = useRef<Map<number, Region>>(new Map());
+  // Use UUID as the key for the map
+  const subtitleToRegionMap = useRef<Map<string, Region>>(new Map());
 
   // Load media file into wavesurfer
   useEffect(() => {
@@ -221,9 +223,10 @@ export default forwardRef(function WaveformVisualizer(
    * Scrolling and zooming the waveform
    */
 
-  const scrollToRegion = (id: number) => {
+  // Accept uuid instead of id
+  const scrollToRegion = (uuid: string) => {
     if (!wavesurfer) return;
-    const region = subtitleToRegionMap.current.get(id);
+    const region = subtitleToRegionMap.current.get(uuid); // Use uuid to get region
     if (region) {
       const duration = wavesurfer.getDuration();
       const containerWidth = containerRef.current?.clientWidth || 0;
@@ -416,9 +419,9 @@ export default forwardRef(function WaveformVisualizer(
         subtitle.endTime
       );
 
-      // Create the new region
+      // Create the new region using uuid as the ID
       const region = regionsPlugin.addRegion({
-        id: subtitle.id.toString(),
+        id: subtitle.uuid, // Use uuid for region ID
         start,
         end,
         content,
@@ -430,8 +433,8 @@ export default forwardRef(function WaveformVisualizer(
 
       styleRegionHandles(region);
 
-      // Save reference
-      subtitleToRegionMap.current.set(subtitle.id, region);
+      // Save reference using uuid as the key
+      subtitleToRegionMap.current.set(subtitle.uuid, region);
     });
   };
 
@@ -467,11 +470,16 @@ export default forwardRef(function WaveformVisualizer(
 
     // Called whenever a region is dragged/resized
     const handleRegionUpdate = (region: Region) => {
-      // Dragged region id
-      const subtitleId = Number.parseInt(region.id);
+      // The region.id is now the UUID (string)
+      const subtitleUuid = region.id;
       let newStartTime = region.start;
       let newEndTime = region.end;
       let adjusted = false;
+
+      // Find the corresponding subtitle object using UUID
+      const currentSubtitle = subtitles.find((s) => s.uuid === subtitleUuid);
+      if (!currentSubtitle) return; // Should not happen if map is correct
+      const subtitleId = currentSubtitle.id; // Get the SRT ID for comparison logic if needed
 
       /** The following codes checks the drag-and-drop behavior of regions
        * 1. If the region is dragged to pass over the preceding or following
@@ -483,29 +491,33 @@ export default forwardRef(function WaveformVisualizer(
        *  it will be adjusted to avoid overlapping.
        */
 
-      // Get sorted list of regions by their subtitle IDs
+      // Sort regions based on their start time or original SRT ID if needed for ordering logic
+      // Sorting by UUID might not give chronological order. Let's sort by start time.
       const sortedRegions = Array.from(
-        subtitleToRegionMap.current.entries()
-      ).sort((a, b) => a[0] - b[0]);
+        subtitleToRegionMap.current.values()
+      ).sort((a, b) => a.start - b.start);
 
-      // Find the index of the current region
-      const currentIndex = sortedRegions.findIndex(([id]) => id === subtitleId);
+      // Find the index of the current region in the time-sorted list
+      const currentIndex = sortedRegions.findIndex(
+        (r) => r.id === subtitleUuid
+      );
 
-      // Get previous and next regions if they exist
+      // Get previous and next regions based on time order
       const prevRegion =
-        currentIndex > 0 ? sortedRegions[currentIndex - 1][1] : null;
+        currentIndex > 0 ? sortedRegions[currentIndex - 1] : null; // Access Region directly
       const nextRegion =
         currentIndex < sortedRegions.length - 1
-          ? sortedRegions[currentIndex + 1][1]
+          ? sortedRegions[currentIndex + 1] // Access Region directly
           : null;
 
-      // Check for complete over with previous or next region
+      // Check for complete overlap with previous or next region (using time-sorted neighbors)
       if (
-        (prevRegion && newEndTime < prevRegion.end) ||
-        (nextRegion && newStartTime > nextRegion.start)
+        (prevRegion && newEndTime <= prevRegion.start) || // Adjusted logic: end time before prev start
+        (nextRegion && newStartTime >= nextRegion.end) // Adjusted logic: start time after next end
       ) {
         // Completely passed over, revert to original position
-        const originalSubtitle = subtitles.find((s) => s.id === subtitleId);
+        // Find original subtitle using UUID
+        const originalSubtitle = subtitles.find((s) => s.uuid === subtitleUuid);
         if (originalSubtitle) {
           const originalStartTime = timeToSeconds(originalSubtitle.startTime);
           const originalEndTime = timeToSeconds(originalSubtitle.endTime);
@@ -530,21 +542,24 @@ export default forwardRef(function WaveformVisualizer(
         return; // Exit without updating subtitle timing
       }
 
-      // If partial overlap was detected, update the region with adjusted times
-      if (
-        prevRegion &&
-        newStartTime < prevRegion.end &&
-        newEndTime > prevRegion.end
-      ) {
+      // Adjust for partial overlap with time-sorted neighbors
+      if (prevRegion && newStartTime < prevRegion.end) {
+        // Overlaps with previous region's end
         adjusted = true;
         newStartTime = prevRegion.end;
-      } else if (
-        nextRegion &&
-        newStartTime < nextRegion.start &&
-        newEndTime > nextRegion.start
-      ) {
+        // Ensure minimum duration if adjustment makes start >= end
+        if (newStartTime >= newEndTime) {
+          newEndTime = newStartTime + 0.1; // Add small duration
+        }
+      }
+      if (nextRegion && newEndTime > nextRegion.start) {
+        // Overlaps with next region's start
         adjusted = true;
         newEndTime = nextRegion.start;
+        // Ensure minimum duration if adjustment makes end <= start
+        if (newEndTime <= newStartTime) {
+          newStartTime = newEndTime - 0.1; // Subtract small duration
+        }
       }
 
       if (adjusted) {
@@ -557,7 +572,8 @@ export default forwardRef(function WaveformVisualizer(
       const newStartTimeFormatted = secondsToTime(newStartTime);
       const newEndTimeFormatted = secondsToTime(newEndTime);
 
-      const subtitle = subtitles.find((s) => s.id === subtitleId);
+      // Find subtitle by UUID to update content
+      const subtitle = subtitles.find((s) => s.uuid === subtitleUuid);
       if (subtitle) {
         region.setOptions({
           content: getContentHtml(
@@ -570,8 +586,10 @@ export default forwardRef(function WaveformVisualizer(
         styleRegionHandles(region);
       }
 
+      // Call update function with the SRT ID (as expected by the current prop signature)
+      // If the prop signature changes later, update this too.
       onUpdateSubtitleTiming(
-        subtitleId,
+        subtitleId, // Pass the SRT ID
         newStartTimeFormatted,
         newEndTimeFormatted
       );
@@ -605,7 +623,8 @@ export default forwardRef(function WaveformVisualizer(
   useEffect(() => {
     if (!wavesurfer) return;
     subtitles.map((subtitle) => {
-      const region = subtitleToRegionMap.current.get(subtitle.id);
+      // Get region by UUID
+      const region = subtitleToRegionMap.current.get(subtitle.uuid);
       if (region?.element) {
         region.setOptions({
           content: getContentHtml(
