@@ -65,23 +65,79 @@ export default function FindReplace({
       findRegex = /(?:)/; // Empty regex that won't match anything
     }
 
-    const updatedSubtitles = subtitles.map((subtitle) => {
-      if (selectedSubtitles.has(subtitle.id) && findRegex.test(subtitle.text)) {
-        const newText = subtitle.text.replace(findRegex, replaceText);
-        return { ...subtitle, text: newText };
+    // Capture current settings and selection into local constants
+    const currentFindText = findText;
+    const currentReplaceText = replaceText;
+    const currentSelectedIds = new Set(selectedSubtitles);
+    const currentIsCaseSensitive = isCaseSensitive;
+    const currentIsMatchFullWord = isMatchFullWord;
+    const currentIsRegexMode = isRegexMode;
+
+    if (!currentFindText || currentSelectedIds.size === 0) return;
+
+    // Use the functional update form
+    setSubtitles((currentSubtitles) => {
+      let changesMade = false;
+
+      const newSubtitles = currentSubtitles.map((subtitle) => {
+        // Check if this subtitle is selected
+        if (currentSelectedIds.has(subtitle.id)) {
+          // Create a *NEW* regex instance *INSIDE* the update function for this specific subtitle.
+          const regexFlags = currentIsCaseSensitive ? "g" : "gi";
+          let findRegexForThisSubtitle: RegExp | null = null;
+          try {
+            if (currentIsRegexMode) {
+              findRegexForThisSubtitle = new RegExp(
+                currentFindText,
+                regexFlags
+              );
+            } else if (currentIsMatchFullWord) {
+              findRegexForThisSubtitle = new RegExp(
+                `\\b${escapeRegExp(currentFindText)}\\b`,
+                regexFlags
+              );
+            } else {
+              findRegexForThisSubtitle = new RegExp(
+                escapeRegExp(currentFindText),
+                regexFlags
+              );
+            }
+          } catch (e) {
+            console.error("Invalid regex during replace:", e);
+            // Keep existing subtitle if regex is invalid
+            return subtitle;
+          }
+
+          // Test and replace using THIS instance.
+          // Need to check findRegexForThisSubtitle is not null
+          if (findRegexForThisSubtitle.test(subtitle.text)) {
+            // Reset lastIndex just before replace (belt-and-suspenders with new regex)
+            findRegexForThisSubtitle.lastIndex = 0;
+            const newText = subtitle.text.replace(
+              findRegexForThisSubtitle,
+              currentReplaceText
+            );
+
+            if (newText !== subtitle.text) {
+              changesMade = true;
+              return { ...subtitle, text: newText }; // Return updated subtitle
+            }
+          }
+        }
+        // Return unchanged subtitle if not selected, regex invalid, or no match found
+        return subtitle;
+      });
+
+      // IMPORTANT: Only return the new array if changes were actually made
+      // This prevents pushing identical state onto the undo stack
+      if (changesMade) {
+        return newSubtitles;
       }
-      return subtitle;
+      return currentSubtitles; // Return the original state if no changes
     });
 
-    // Pass the updated array directly to the setter
-    setSubtitles(updatedSubtitles);
-    // Update local state for matched subtitles based on the *newly* updated subtitles
-    setMatchedSubtitles(
-      updatedSubtitles.filter(
-        (subtitle) =>
-          selectedSubtitles.has(subtitle.id) && findRegex.test(subtitle.text)
-      )
-    );
+    // Clear selection after initiating the state update
+    setSelectedSubtitles(new Set());
   };
 
   const highlightMatches = (text: string, findRegex: RegExp) => {
@@ -143,17 +199,40 @@ export default function FindReplace({
         } else {
           findRegex = new RegExp(escapeRegExp(findText), regexFlags);
         }
+        // Filter by creating a fresh regex for each subtitle test
         setMatchedSubtitles(
-          subtitles.filter((subtitle) => findRegex.test(subtitle.text))
+          subtitles.filter((subtitle) => {
+            // Recreate regex inside the filter callback for isolation
+            const regexFlags = isCaseSensitive ? "g" : "gi";
+            let testRegex: RegExp | null = null;
+            try {
+              if (isRegexMode) {
+                testRegex = new RegExp(findText, regexFlags);
+              } else if (isMatchFullWord) {
+                testRegex = new RegExp(
+                  `\\b${escapeRegExp(findText)}\\b`,
+                  regexFlags
+                );
+              } else {
+                testRegex = new RegExp(escapeRegExp(findText), regexFlags);
+              }
+              // Perform the test with the fresh regex
+              return testRegex ? testRegex.test(subtitle.text) : false;
+            } catch {
+              return false; // Subtitle doesn't match if regex is invalid
+            }
+          })
         );
       } catch (e) {
-        // Handle invalid regex
+        // This outer catch might be redundant now but kept for safety
+        console.error("Error setting up regex for matching:", e);
         setMatchedSubtitles([]);
       }
     } else {
       setMatchedSubtitles([]);
       setSelectedSubtitles(new Set());
     }
+    // Dependencies remain the same, the logic inside handles the changes
   }, [subtitles, findText, isCaseSensitive, isMatchFullWord, isRegexMode]);
 
   return (
@@ -292,14 +371,36 @@ export default function FindReplace({
               <TableBody>
                 {matchedSubtitles.length > 0 ? (
                   matchedSubtitles.map((subtitle) => {
-                    const regexFlags = isCaseSensitive ? "g" : "gi";
-                    const findRegex = isMatchFullWord
-                      ? new RegExp(`\\b${findText}\\b`, regexFlags)
-                      : new RegExp(findText, regexFlags);
-                    const newText = subtitle.text.replace(
-                      findRegex,
-                      replaceText
-                    );
+                    // Create fresh regex for this specific row's rendering
+                    let displayRegex: RegExp | null = null;
+                    let newText = subtitle.text; // Default to original text
+                    try {
+                      const regexFlags = isCaseSensitive ? "g" : "gi";
+                      if (isRegexMode) {
+                        displayRegex = new RegExp(findText, regexFlags);
+                      } else if (isMatchFullWord) {
+                        displayRegex = new RegExp(
+                          `\\b${escapeRegExp(findText)}\\b`,
+                          regexFlags
+                        );
+                      } else {
+                        displayRegex = new RegExp(
+                          escapeRegExp(findText),
+                          regexFlags
+                        );
+                      }
+                      // Calculate replacement only if regex is valid
+                      if (displayRegex) {
+                        newText = subtitle.text.replace(
+                          displayRegex,
+                          replaceText
+                        );
+                      }
+                    } catch {
+                      displayRegex = null; // Ensure regex is null if invalid
+                      newText = subtitle.text; // Show original text if regex invalid
+                    }
+
                     return (
                       <TableRow
                         key={subtitle.id}
@@ -323,14 +424,22 @@ export default function FindReplace({
                           {subtitle.id}
                         </TableCell>
                         <TableCell>
-                          {highlightMatches(subtitle.text, findRegex)}
+                          {/* Pass the potentially null, freshly created regex */}
+                          {displayRegex
+                            ? highlightMatches(subtitle.text, displayRegex)
+                            : subtitle.text}
                         </TableCell>
                         <TableCell>
-                          {highlightReplacements(
-                            subtitle.text,
-                            newText,
-                            findRegex
-                          )}
+                          {/* Pass the potentially null, freshly created regex */}
+                          {
+                            displayRegex
+                              ? highlightReplacements(
+                                  subtitle.text,
+                                  newText,
+                                  displayRegex // Use the same regex used for newText calculation
+                                )
+                              : newText /* Show calculated newText or original if regex invalid */
+                          }
                         </TableCell>
                       </TableRow>
                     );
@@ -350,7 +459,11 @@ export default function FindReplace({
           </div>
         </div>
         <DialogFooter>
-          <Button className="cursor-pointer" onClick={handleReplace}>
+          <Button
+            className="cursor-pointer"
+            onClick={handleReplace}
+            disabled={selectedSubtitles.size === 0} // Disable if nothing is selected
+          >
             <IconReplace />
             Replace
           </Button>

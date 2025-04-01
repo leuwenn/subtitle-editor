@@ -197,11 +197,17 @@ export default function Home() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Check if the focused element is a textarea
-      if (document.activeElement?.tagName === "TEXTAREA") return;
+      const activeElement = document.activeElement;
+      // Check if the focused element is an input or textarea
+      if (
+        activeElement?.tagName === "INPUT" ||
+        activeElement?.tagName === "TEXTAREA"
+      ) {
+        return; // Allow spacebar default behavior in inputs/textareas
+      }
 
       if (event.code === "Space") {
-        event.preventDefault();
+        event.preventDefault(); // Prevent default space behavior (like scrolling) elsewhere
         setIsPlaying(!isPlaying);
       }
     };
