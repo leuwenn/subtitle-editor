@@ -369,25 +369,55 @@ export default function SubtitleList({
                   </Tooltip>
                 )}
 
-                <Tooltip>
-                  <TooltipTrigger
-                    type="button"
-                    onClick={() =>
-                      onAddSubtitle(
-                        subtitle.id,
-                        index < subtitles.length - 1
-                          ? subtitles[index + 1].id
-                          : null
-                      )
+                {(() => {
+                  // Calculate if the add button should be disabled
+                  let isAddDisabled = false;
+                  let tooltipContent = "Add";
+                  if (index < subtitles.length - 1) {
+                    const currentEndTimeSec = timeToSeconds(subtitle.endTime);
+                    const nextStartTimeSec = timeToSeconds(
+                      subtitles[index + 1].startTime
+                    );
+                    const timeDiff = nextStartTimeSec - currentEndTimeSec;
+                    isAddDisabled = timeDiff <= 0.001;
+                    if (isAddDisabled) {
+                      tooltipContent = "No room to add";
                     }
-                    className="px-2 py-1 text-sm bg-green-100 hover:bg-green-200 text-green-700 rounded cursor-pointer"
-                  >
-                    <IconPlus size={16} />
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-green-500 px-2 py-1 text-sm">
-                    Add
-                  </TooltipContent>
-                </Tooltip>
+                  }
+
+                  return (
+                    <Tooltip>
+                      <TooltipTrigger
+                        type="button"
+                        disabled={isAddDisabled}
+                        onClick={() => {
+                          if (!isAddDisabled) {
+                            onAddSubtitle(
+                              subtitle.id,
+                              index < subtitles.length - 1
+                                ? subtitles[index + 1].id
+                                : null
+                            );
+                          }
+                        }}
+                        className={`px-2 py-1 text-sm rounded ${
+                          isAddDisabled
+                            ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-not-allowed"
+                            : "bg-green-100 hover:bg-green-200 text-green-700 cursor-pointer"
+                        }`}
+                      >
+                        <IconPlus size={16} />
+                      </TooltipTrigger>
+                      <TooltipContent
+                        className={`px-2 py-1 text-sm ${
+                          isAddDisabled ? "bg-gray-500" : "bg-green-500"
+                        }`}
+                      >
+                        {tooltipContent}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })()}
               </div>
             </motion.div>
           ))}
