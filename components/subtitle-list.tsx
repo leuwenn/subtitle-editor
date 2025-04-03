@@ -332,6 +332,11 @@ export default function SubtitleList({
                             // e.g. confirm edit
                             onUpdateSubtitle(subtitle.id, editText);
                             setEditingSubtitleUuid(null); // Reset parent state
+                          } else if (e.key === "Escape") {
+                            e.preventDefault();
+                            // Cancel edit: Reset text and exit edit mode
+                            setEditText(subtitle.text); // Revert to original text
+                            setEditingSubtitleUuid(null); // Exit edit mode
                           }
                         }}
                         className="w-full px-2 h-4"
