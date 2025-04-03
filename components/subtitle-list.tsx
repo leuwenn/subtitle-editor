@@ -27,6 +27,8 @@ interface SubtitleListProps {
   onSplitSubtitle: (id: number, caretPos: number, textLength: number) => void;
   setIsPlaying: (isPlaying: boolean) => void;
   setPlaybackTime: (time: number) => void;
+  editingSubtitleUuid: string | null;
+  setEditingSubtitleUuid: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 export default function SubtitleList({
@@ -42,6 +44,8 @@ export default function SubtitleList({
   onSplitSubtitle,
   setIsPlaying,
   setPlaybackTime,
+  editingSubtitleUuid,
+  setEditingSubtitleUuid,
 }: SubtitleListProps) {
   const [editingStartTimeId, setEditingStartTimeId] = useState<number | null>(
     null
@@ -50,13 +54,32 @@ export default function SubtitleList({
   const [editingEndTimeId, setEditingEndTimeId] = useState<number | null>(null);
   const [editEndTime, setEditEndTime] = useState("");
 
-  const [editingTextId, setEditingTextId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
+  const textAreaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({}); // Ref to hold text area elements by uuid
 
   const { toast } = useToast();
 
-  // Scroll to the current subtitle when user clicks a region in the waveform visualizer
+  // Effect to handle focusing the text area when editingSubtitleUuid changes
+  useEffect(() => {
+    if (editingSubtitleUuid) {
+      const subtitleToEdit = subtitles.find(
+        (sub) => sub.uuid === editingSubtitleUuid
+      );
+      if (subtitleToEdit) {
+        // Set the text for the textarea
+        setEditText(subtitleToEdit.text);
+        // Focus the corresponding textarea
+        setTimeout(() => {
+          textAreaRefs.current[editingSubtitleUuid]?.focus();
+          // Select all text in the textarea
+          textAreaRefs.current[editingSubtitleUuid]?.select();
+        }, 0); // Timeout ensures the element is rendered
+      }
+    }
+  }, [editingSubtitleUuid, subtitles]); // Depend on editingSubtitleUuid and subtitles
+
+  // Scroll to the current subtitle based on playback time
   useEffect(() => {
     if (!listRef.current) return;
 
@@ -270,16 +293,18 @@ export default function SubtitleList({
                 {/* Subtitle text */}
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex-1">
-                    {editingTextId === subtitle.id ? (
+                    {/* Use editingSubtitleUuid directly */}
+                    {editingSubtitleUuid === subtitle.uuid ? (
                       <Textarea
-                        ref={(textArea) => {
-                          if (textArea) textArea.focus();
+                        ref={(el) => {
+                          // Store ref in the map
+                          textAreaRefs.current[subtitle.uuid] = el;
                         }}
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
                         onBlur={() => {
                           onUpdateSubtitle(subtitle.id, editText);
-                          setEditingTextId(null);
+                          setEditingSubtitleUuid(null);
                         }}
                         onKeyDown={(e) => {
                           // Stop space key propagation when editing
@@ -298,7 +323,7 @@ export default function SubtitleList({
                             onSplitSubtitle(subtitle.id, caretPos, totalLen);
 
                             // If you also want to end editing after splitting:
-                            setEditingTextId(null);
+                            setEditingSubtitleUuid(null); // Reset parent state
                             return;
                           }
 
@@ -306,7 +331,7 @@ export default function SubtitleList({
                           if (e.key === "Enter" && !e.shiftKey) {
                             // e.g. confirm edit
                             onUpdateSubtitle(subtitle.id, editText);
-                            setEditingTextId(null);
+                            setEditingSubtitleUuid(null); // Reset parent state
                           }
                         }}
                         className="w-full px-2 h-4"
@@ -317,13 +342,15 @@ export default function SubtitleList({
                         className="w-full text-left text-lg cursor-pointer"
                         tabIndex={0}
                         onClick={() => {
-                          setEditingTextId(subtitle.id);
-                          setEditText(subtitle.text);
+                          // Set parent state directly
+                          setEditingSubtitleUuid(subtitle.uuid);
+                          // editText state will be set by the useEffect hook
                         }}
                         onKeyUp={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
-                            setEditingTextId(subtitle.id);
-                            setEditText(subtitle.text);
+                            // Set parent state directly
+                            setEditingSubtitleUuid(subtitle.uuid);
+                            // editText state will be set by the useEffect hook
                           }
                         }}
                       >

@@ -47,6 +47,7 @@ import {
 } from "@tabler/icons-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+// Import useState
 import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid"; // Import uuid
 
@@ -85,6 +86,10 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [duration, setDuration] = useState<number>(0);
   const [playbackRate, setPlaybackRate] = useState(1);
+  // State to track which subtitle is being edited
+  const [editingSubtitleUuid, setEditingSubtitleUuid] = useState<string | null>(
+    null
+  );
 
   const handleFileUpload = async (file: File) => {
     setSrtFileName(file.name);
@@ -209,15 +214,42 @@ export default function Home() {
       if (event.code === "Space") {
         event.preventDefault(); // Prevent default space behavior (like scrolling) elsewhere
         setIsPlaying(!isPlaying);
+      } else if (event.key === "Tab") {
+        event.preventDefault(); // Prevent default tab behavior (focus switching)
+
+        // Find the subtitle currently playing
+        const currentSubtitle = subtitles.find((sub) => {
+          // Convert SRT time strings to seconds for comparison
+          const startTimeSeconds = timeStringToSeconds(sub.startTime);
+          const endTimeSeconds = timeStringToSeconds(sub.endTime);
+          return (
+            playbackTime >= startTimeSeconds && playbackTime < endTimeSeconds
+          );
+        });
+
+        if (currentSubtitle) {
+          setEditingSubtitleUuid(currentSubtitle.uuid); // Set the UUID of the subtitle to edit
+          // Optionally, scroll the list to the editing item if needed
+          // This might require passing a ref or callback to SubtitleList
+        }
       }
+    };
+
+    // Helper function to convert SRT time string (HH:MM:SS,ms) to seconds
+    const timeStringToSeconds = (timeString: string): number => {
+      const [hms, ms] = timeString.split(",");
+      const [h, m, s] = hms.split(":").map(Number);
+      return h * 3600 + m * 60 + s + Number(ms) / 1000;
     };
 
     window.addEventListener("keydown", handleKeyDown);
 
+    // Cleanup function
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isPlaying]); // Keep this dependency for play/pause
+    // Dependencies now include subtitles and playbackTime for finding the current subtitle
+  }, [isPlaying, subtitles, playbackTime]); // Removed setEditingSubtitleUuid
 
   // Effect for Undo/Redo keyboard shortcuts
   useEffect(() => {
@@ -384,6 +416,9 @@ export default function Home() {
                   onSplitSubtitle={handleSplitSubtitle}
                   setIsPlaying={setIsPlaying}
                   setPlaybackTime={setPlaybackTime}
+                  // Pass editing state down
+                  editingSubtitleUuid={editingSubtitleUuid}
+                  setEditingSubtitleUuid={setEditingSubtitleUuid}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground rounded-sm cursor-pointer">
