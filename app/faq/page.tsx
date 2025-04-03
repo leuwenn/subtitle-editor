@@ -1,5 +1,13 @@
+import type { Metadata } from "next"; // Import Metadata type
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+
+// Add specific metadata for the FAQ page
+export const metadata: Metadata = {
+  title: "FAQ", // Will use template: "FAQ | Subtitle Editor Online"
+  description:
+    "Frequently asked questions about the subtitle editor, including features, comparisons, maintenance, and feedback.",
+};
 
 export default function FaqPage() {
   return (

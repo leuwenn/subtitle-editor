@@ -13,10 +13,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Subtitle Editor",
+  metadataBase: new URL("https://subtitle-editor.org"),
+  title: {
+    template: "%s | Subtitle Editor", // Page title will replace %s
+    default: "Subtitle Editor - Free, Open-source SRT Editing Tool", // Default title for root layout
+  },
   description:
-    "Free, open-sourced, fully-web srt editor. No account registration required.",
+    "Edit, create, and synchronize SRT subtitle files and captions easily with this free, open-source, web-based editor. Features video preview and waveform visualization. No signup required.",
   icons: "/badge-cc.svg", // Set the favicon
+  // Add Open Graph tags
+  openGraph: {
+    // title: Will use title.default or template from above
+    // description: Will use the main description from above
+    url: "https://subtitle-editor.org",
+    siteName: "Subtitle Editor",
+    images: [
+      {
+        url: "/badge-cc.svg", // Placeholder - recommend replacing with PNG/JPG 1200x630 later
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
