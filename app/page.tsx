@@ -28,6 +28,7 @@ import {
   useSubtitleContext,
 } from "@/context/subtitle-context"; // Import context
 import { parseSRT } from "@/lib/subtitleOperations"; // Keep only parseSRT
+import { timeToSeconds } from "@/lib/utils"; // Use the original timeToSeconds
 import {
   DownloadIcon,
   QuestionMarkCircledIcon,
@@ -167,9 +168,9 @@ function MainContent() {
 
         // Find the subtitle currently playing
         const currentSubtitle = subtitles.find((sub) => {
-          // Convert SRT time strings to seconds for comparison
-          const startTimeSeconds = timeStringToSeconds(sub.startTime);
-          const endTimeSeconds = timeStringToSeconds(sub.endTime);
+          // Convert SRT time strings to seconds using the original util function
+          const startTimeSeconds = timeToSeconds(sub.startTime);
+          const endTimeSeconds = timeToSeconds(sub.endTime);
           return (
             playbackTime >= startTimeSeconds && playbackTime < endTimeSeconds
           );
@@ -181,13 +182,6 @@ function MainContent() {
           // This might require passing a ref or callback to SubtitleList
         }
       }
-    };
-
-    // Helper function to convert SRT time string (HH:MM:SS,ms) to seconds
-    const timeStringToSeconds = (timeString: string): number => {
-      const [hms, ms] = timeString.split(",");
-      const [h, m, s] = hms.split(":").map(Number);
-      return h * 3600 + m * 60 + s + Number(ms) / 1000;
     };
 
     window.addEventListener("keydown", handleKeyDown);
