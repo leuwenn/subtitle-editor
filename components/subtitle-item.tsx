@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useSubtitleContext } from "@/context/subtitle-context"; // Import context
 import { useToast } from "@/hooks/use-toast";
 import { isValidTime, timeToSeconds } from "@/lib/utils";
 import type { Subtitle } from "@/types/subtitle";
@@ -22,13 +23,6 @@ interface SubtitleItemProps {
   currentTime: number;
   editingSubtitleUuid: string | null;
   onScrollToRegion: (uuid: string) => void;
-  onUpdateSubtitleStartTime: (id: number, newTime: string) => void;
-  onUpdateSubtitleEndTime: (id: number, newTime: string) => void;
-  onUpdateSubtitle: (id: number, newText: string) => void;
-  onMergeSubtitles: (id1: number, id2: number) => void;
-  onAddSubtitle: (beforeId: number, afterId: number | null) => void;
-  onDeleteSubtitle: (id: number) => void;
-  onSplitSubtitle: (id: number, caretPos: number, textLength: number) => void;
   setIsPlaying: (isPlaying: boolean) => void;
   setPlaybackTime: (time: number) => void;
   setEditingSubtitleUuid: React.Dispatch<React.SetStateAction<string | null>>;
@@ -42,17 +36,20 @@ export default function SubtitleItem({
   currentTime,
   editingSubtitleUuid,
   onScrollToRegion,
-  onUpdateSubtitleStartTime,
-  onUpdateSubtitleEndTime,
-  onUpdateSubtitle,
-  onMergeSubtitles,
-  onAddSubtitle,
-  onDeleteSubtitle,
-  onSplitSubtitle,
   setIsPlaying,
   setPlaybackTime,
   setEditingSubtitleUuid,
 }: SubtitleItemProps) {
+  const {
+    updateSubtitleStartTimeAction,
+    updateSubtitleEndTimeAction,
+    updateSubtitleTextAction,
+    mergeSubtitlesAction,
+    addSubtitleAction,
+    deleteSubtitleAction,
+    splitSubtitleAction,
+  } = useSubtitleContext();
+
   const [editingStartTimeId, setEditingStartTimeId] = useState<number | null>(
     null
   );
@@ -84,7 +81,8 @@ export default function SubtitleItem({
   const handleTimeUpdate = (
     id: number,
     newTime: string,
-    updateFunction: (id: number, newTime: string) => void,
+    // Replace updateFunction prop with context action
+    updateAction: (id: number, newTime: string) => void,
     setEditingId: (id: number | null) => void,
     isStartTime = false
   ) => {
@@ -124,7 +122,7 @@ export default function SubtitleItem({
       }
     }
 
-    updateFunction(id, newTime);
+    updateAction(id, newTime); // Call context action
     setEditingId(null);
   };
 
@@ -188,7 +186,7 @@ export default function SubtitleItem({
                   handleTimeUpdate(
                     subtitle.id,
                     editStartTime,
-                    onUpdateSubtitleStartTime,
+                    updateSubtitleStartTimeAction,
                     setEditingStartTimeId,
                     true // Indicate it's the start time
                   )
@@ -198,7 +196,7 @@ export default function SubtitleItem({
                     handleTimeUpdate(
                       subtitle.id,
                       editStartTime,
-                      onUpdateSubtitleStartTime,
+                      updateSubtitleStartTimeAction,
                       setEditingStartTimeId,
                       true // Indicate it's the start time
                     );
@@ -239,7 +237,7 @@ export default function SubtitleItem({
                   handleTimeUpdate(
                     subtitle.id,
                     editEndTime,
-                    onUpdateSubtitleEndTime,
+                    updateSubtitleEndTimeAction,
                     setEditingEndTimeId,
                     false // Indicate it's the end time
                   )
@@ -249,7 +247,7 @@ export default function SubtitleItem({
                     handleTimeUpdate(
                       subtitle.id,
                       editEndTime,
-                      onUpdateSubtitleEndTime,
+                      updateSubtitleEndTimeAction,
                       setEditingEndTimeId,
                       false // Indicate it's the end time
                     );
@@ -291,7 +289,7 @@ export default function SubtitleItem({
                   onBlur={() => {
                     // Only update if text actually changed to avoid unnecessary history steps
                     if (editText !== subtitle.text) {
-                      onUpdateSubtitle(subtitle.id, editText);
+                      updateSubtitleTextAction(subtitle.id, editText);
                     }
                     setEditingSubtitleUuid(null); // Exit edit mode
                   }}
@@ -306,7 +304,7 @@ export default function SubtitleItem({
                       e.preventDefault();
                       const caretPos = e.currentTarget.selectionStart;
                       const totalLen = e.currentTarget.value.length;
-                      onSplitSubtitle(subtitle.id, caretPos, totalLen);
+                      splitSubtitleAction(subtitle.id, caretPos, totalLen);
                       setEditingSubtitleUuid(null); // Exit edit mode after split
                       return;
                     }
@@ -315,7 +313,7 @@ export default function SubtitleItem({
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault(); // Prevent default newline behavior
                       if (editText !== subtitle.text) {
-                        onUpdateSubtitle(subtitle.id, editText);
+                        updateSubtitleTextAction(subtitle.id, editText);
                       }
                       setEditingSubtitleUuid(null); // Exit edit mode
                     } else if (e.key === "Escape") {
@@ -353,7 +351,7 @@ export default function SubtitleItem({
             <Tooltip>
               <TooltipTrigger
                 type="button"
-                onClick={() => onDeleteSubtitle(subtitle.id)}
+                onClick={() => deleteSubtitleAction(subtitle.id)}
                 className="mx-4 my-auto px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded cursor-pointer"
               >
                 <IconTrash size={16} />
@@ -371,7 +369,9 @@ export default function SubtitleItem({
             <Tooltip>
               <TooltipTrigger
                 type="button"
-                onClick={() => onMergeSubtitles(subtitle.id, nextSubtitle.id)}
+                onClick={() =>
+                  mergeSubtitlesAction(subtitle.id, nextSubtitle.id)
+                }
                 className="px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded cursor-pointer"
               >
                 <IconFold size={16} />
@@ -388,7 +388,7 @@ export default function SubtitleItem({
               disabled={isAddDisabled}
               onClick={() => {
                 if (!isAddDisabled) {
-                  onAddSubtitle(
+                  addSubtitleAction(
                     subtitle.id,
                     !isLastItem && nextSubtitle ? nextSubtitle.id : null
                   );

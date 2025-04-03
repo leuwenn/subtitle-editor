@@ -1,7 +1,7 @@
 "use client";
 
+import { useSubtitleContext } from "@/context/subtitle-context"; // Import context
 import { secondsToTime, timeToSeconds } from "@/lib/utils";
-import type { Subtitle } from "@/types/subtitle";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useWavesurfer } from "@wavesurfer/react";
 import {
@@ -112,16 +112,8 @@ interface WaveformVisualizerProps {
   mediaFile: File | null;
   currentTime: number;
   isPlaying: boolean;
-  subtitles: Subtitle[];
   onSeek: (time: number) => void;
   onPlayPause: (playing: boolean) => void;
-  onUpdateSubtitleTiming: (
-    id: number,
-    startTime: string,
-    endTime: string
-  ) => void;
-  onUpdateSubtitleText: (id: number, newText: string) => void;
-  onDeleteSubtitle: (id: number) => void;
 }
 
 export default forwardRef(function WaveformVisualizer(
@@ -129,15 +121,15 @@ export default forwardRef(function WaveformVisualizer(
     mediaFile,
     currentTime,
     isPlaying,
-    subtitles,
     onSeek,
     onPlayPause,
-    onUpdateSubtitleTiming,
   }: WaveformVisualizerProps,
   // Update the ref type to expect uuid (string)
   ref: ForwardedRef<{ scrollToRegion: (uuid: string) => void }>
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Get subtitles and actions from context
+  const { subtitles, updateSubtitleTimeAction } = useSubtitleContext();
 
   const [mediaUrl, setMediaUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -172,7 +164,6 @@ export default forwardRef(function WaveformVisualizer(
   };
 
   const { wavesurfer } = useWavesurfer({
-    // useMemo removed - React Compiler handles memoization
     container: containerRef,
     height: "auto",
     waveColor: "#A7F3D0",
@@ -634,9 +625,8 @@ export default forwardRef(function WaveformVisualizer(
         styleRegionHandles(region);
       }
 
-      // Call update function with the SRT ID (as expected by the current prop signature)
-      // If the prop signature changes later, update this too.
-      onUpdateSubtitleTiming(
+      // Call context action with the SRT ID
+      updateSubtitleTimeAction(
         subtitleId, // Pass the SRT ID
         newStartTimeFormatted,
         newEndTimeFormatted
@@ -665,7 +655,7 @@ export default forwardRef(function WaveformVisualizer(
         regionsPlugin.un("region-updated", handleRegionUpdate);
       }
     };
-  }, [wavesurfer, subtitles, onUpdateSubtitleTiming]);
+  }, [wavesurfer, subtitles, updateSubtitleTimeAction]); // Depend on context action
 
   // Update subtitle text requires only updating the target region content
   useEffect(() => {

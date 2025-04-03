@@ -1,7 +1,7 @@
 "use client";
 
+import { useSubtitleContext } from "@/context/subtitle-context"; // Import context
 import { srtToVtt, subtitlesToSrtString } from "@/lib/utils";
-import type { Subtitle } from "@/types/subtitle";
 import { useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import { Input } from "./ui/input";
@@ -9,7 +9,6 @@ import { Label } from "./ui/label";
 
 interface VideoPlayerProps {
   mediaFile: File | null;
-  subtitles: Subtitle[];
   setMediaFile: (file: File | null) => void;
   setMediaFileName: (name: string) => void;
   onProgress: (time: number) => void;
@@ -22,7 +21,6 @@ interface VideoPlayerProps {
 
 export default function VideoPlayer({
   mediaFile,
-  subtitles,
   setMediaFile,
   setMediaFileName,
   onProgress,
@@ -32,6 +30,9 @@ export default function VideoPlayer({
   isPlaying,
   playbackRate,
 }: VideoPlayerProps) {
+  // Get subtitles from context
+  const { subtitles } = useSubtitleContext();
+
   const [mediaUrl, setMediaUrl] = useState<string>("");
   const [vttUrl, setVttUrl] = useState("");
   const playerRef = useRef<ReactPlayer>(null);

@@ -23,18 +23,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import VideoPlayer from "@/components/video-player";
-import { useUndoableState } from "@/hooks/use-undoable-state";
 import {
-  addSubtitle,
-  deleteSubtitle,
-  mergeSubtitles,
-  parseSRT,
-  splitSubtitle,
-  updateSubtitle,
-  updateSubtitleEndTime,
-  updateSubtitleStartTime,
-} from "@/lib/subtitleOperations";
-import type { Subtitle } from "@/types/subtitle";
+  SubtitleProvider,
+  useSubtitleContext,
+} from "@/context/subtitle-context"; // Import context
+import { parseSRT } from "@/lib/subtitleOperations"; // Keep only parseSRT
 import {
   DownloadIcon,
   QuestionMarkCircledIcon,
@@ -62,19 +55,21 @@ interface WaveformRef {
   scrollToRegion: (uuid: string) => void; // Change id to uuid
 }
 
-export default function Home() {
+// Define the main content component that will consume the context
+function MainContent() {
   const waveformRef = useRef<WaveformRef>(null);
-
-  // Replace useState with useUndoableState for subtitles
-  const [
+  // Get subtitle state and actions from context
+  const {
     subtitles,
-    setSubtitlesWithHistory,
+    setInitialSubtitles, // Use this instead of setSubtitlesWithHistory
     undoSubtitles,
     redoSubtitles,
     canUndoSubtitles,
     canRedoSubtitles,
-  ] = useUndoableState<Subtitle[]>([]);
+    // Action functions are now available via context, no need for local handlers like handleUpdateSubtitleText etc.
+  } = useSubtitleContext();
 
+  // Keep page-specific state here
   const [srtFileName, setSrtFileName] = useState<string>("subtitles.srt");
   const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
   const [pendingSrtFile, setPendingSrtFile] = useState<File | null>(null);
@@ -95,8 +90,8 @@ export default function Home() {
     setSrtFileName(file.name);
     const text = await file.text();
     const parsedSubtitles = parseSRT(text);
-    // Use the undoable state setter (resets history when loading a new file)
-    setSubtitlesWithHistory(parsedSubtitles);
+    // Use the context action to set initial subtitles
+    setInitialSubtitles(parsedSubtitles);
   };
 
   const handleSrtFileSelect = async (
@@ -134,55 +129,8 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
-  // --- Subtitle Modification Callbacks using Undoable State ---
-
-  // Handle operations that return a reducer function: (prevState) => newState
-  const handleUpdateSubtitleStartTime = (id: number, newTime: string) => {
-    setSubtitlesWithHistory(updateSubtitleStartTime(id, newTime));
-  };
-
-  const handleUpdateSubtitleEndTime = (id: number, newTime: string) => {
-    setSubtitlesWithHistory(updateSubtitleEndTime(id, newTime));
-  };
-
-  // Handle operations that return the new state directly: newState
-  const handleUpdateSubtitleText = (id: number, newText: string) => {
-    setSubtitlesWithHistory((prev) => updateSubtitle(prev, id, newText));
-  };
-
-  const handleMergeSubtitles = (id1: number, id2: number) => {
-    setSubtitlesWithHistory((prev) => mergeSubtitles(prev, id1, id2));
-  };
-
-  const handleAddSubtitle = (beforeId: number, afterId: number | null) => {
-    setSubtitlesWithHistory((prev) => addSubtitle(prev, beforeId, afterId));
-  };
-
-  const onDeleteSubtitle = (id: number) => {
-    setSubtitlesWithHistory((prev) => deleteSubtitle(prev, id));
-  };
-
-  const handleSplitSubtitle = (
-    id: number,
-    caretPos: number,
-    textLength: number
-  ) => {
-    setSubtitlesWithHistory((prev) =>
-      splitSubtitle(prev, id, caretPos, textLength)
-    );
-  };
-
-  // Handle direct state update (like from WaveformVisualizer drag)
-  const handleUpdateSubtitleTiming = (
-    id: number,
-    startTime: string,
-    endTime: string
-  ) => {
-    setSubtitlesWithHistory((subs) =>
-      subs.map((sub) => (sub.id === id ? { ...sub, startTime, endTime } : sub))
-    );
-  };
-  // --- End Subtitle Modification Callbacks ---
+  // --- Old Subtitle Modification Callbacks Removed ---
+  // Actions are now handled by context provider and consumed directly by child components
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -324,10 +272,8 @@ export default function Home() {
             </Tooltip>
           </TooltipProvider>
 
-          <FindReplace
-            subtitles={subtitles}
-            setSubtitles={setSubtitlesWithHistory}
-          />
+          {/* FindReplace will get subtitles & actions from context */}
+          <FindReplace />
 
           <Label className="cursor-pointer">
             <Input
@@ -397,26 +343,17 @@ export default function Home() {
           <div className="w-1/2">
             <div className="h-full">
               {subtitles.length > 0 ? (
+                // SubtitleList will get subtitles & actions from context
                 <SubtitleList
-                  subtitles={subtitles}
+                  // Pass only non-subtitle state/props
                   currentTime={playbackTime}
-                  // Expect uuid from SubtitleList and pass it to waveformRef
                   onScrollToRegion={(uuid) => {
                     if (waveformRef.current) {
                       waveformRef.current.scrollToRegion(uuid);
                     }
                   }}
-                  // Pass the new memoized callbacks that use setSubtitlesWithHistory
-                  onUpdateSubtitleStartTime={handleUpdateSubtitleStartTime}
-                  onUpdateSubtitleEndTime={handleUpdateSubtitleEndTime}
-                  onUpdateSubtitle={handleUpdateSubtitleText}
-                  onMergeSubtitles={handleMergeSubtitles}
-                  onAddSubtitle={handleAddSubtitle}
-                  onDeleteSubtitle={onDeleteSubtitle}
-                  onSplitSubtitle={handleSplitSubtitle}
                   setIsPlaying={setIsPlaying}
                   setPlaybackTime={setPlaybackTime}
-                  // Pass editing state down
                   editingSubtitleUuid={editingSubtitleUuid}
                   setEditingSubtitleUuid={setEditingSubtitleUuid}
                 />
@@ -439,8 +376,8 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() =>
-                      // Use the undoable state setter for starting from scratch
-                      setSubtitlesWithHistory([
+                      // Use the context action for starting from scratch
+                      setInitialSubtitles([
                         {
                           uuid: uuidv4(), // Assign UUID
                           id: 1,
@@ -461,9 +398,9 @@ export default function Home() {
 
           {/* Right panel - Media player */}
           <div className="w-1/2 border-l-2 border-black">
+            {/* VideoPlayer will get subtitles from context */}
             <VideoPlayer
               mediaFile={mediaFile}
-              subtitles={subtitles}
               setMediaFile={setMediaFile}
               setMediaFileName={setMediaFileName}
               onProgress={(time) => setPlaybackTime(time)}
@@ -498,13 +435,9 @@ export default function Home() {
                 mediaFile={mediaFile}
                 currentTime={playbackTime}
                 isPlaying={isPlaying}
-                subtitles={subtitles}
                 onSeek={setPlaybackTime}
                 onPlayPause={setIsPlaying}
-                // Pass the new memoized callbacks that use setSubtitlesWithHistory
-                onUpdateSubtitleTiming={handleUpdateSubtitleTiming}
-                onUpdateSubtitleText={handleUpdateSubtitleText}
-                onDeleteSubtitle={onDeleteSubtitle}
+                // Subtitle action props removed (will use context)
               />
             </>
           ) : (
@@ -571,5 +504,14 @@ export default function Home() {
         </AlertDialog>
       </div>
     </div>
+  );
+}
+
+// Default export wraps MainContent with the provider
+export default function Home() {
+  return (
+    <SubtitleProvider>
+      <MainContent />
+    </SubtitleProvider>
   );
 }

@@ -20,23 +20,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useSubtitleContext } from "@/context/subtitle-context"; // Import context
 import { escapeRegExp } from "@/lib/utils";
 import type { Subtitle } from "@/types/subtitle";
 import { IconReplace, IconSearch } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
-interface FindReplaceProps {
-  subtitles: Subtitle[];
-  // Update the type to match the setter from useUndoableState
-  setSubtitles: (
-    action: Subtitle[] | ((prevState: Subtitle[]) => Subtitle[])
-  ) => void;
-}
+export default function FindReplace() {
+  const { subtitles, replaceAllSubtitlesAction } = useSubtitleContext();
 
-export default function FindReplace({
-  subtitles,
-  setSubtitles,
-}: FindReplaceProps) {
   const [findText, setFindText] = useState("");
   const [replaceText, setReplaceText] = useState("");
   const [isCaseSensitive, setIsCaseSensitive] = useState(false);
@@ -75,66 +67,64 @@ export default function FindReplace({
 
     if (!currentFindText || currentSelectedIds.size === 0) return;
 
-    // Use the functional update form
-    setSubtitles((currentSubtitles) => {
-      let changesMade = false;
+    // --- Refactored Replace Logic ---
+    let changesMade = false;
+    // No need for subtitlesToReplace variable anymore
 
-      const newSubtitles = currentSubtitles.map((subtitle) => {
-        // Check if this subtitle is selected
-        if (currentSelectedIds.has(subtitle.id)) {
-          // Create a *NEW* regex instance *INSIDE* the update function for this specific subtitle.
-          const regexFlags = currentIsCaseSensitive ? "g" : "gi";
-          let findRegexForThisSubtitle: RegExp | null = null;
-          try {
-            if (currentIsRegexMode) {
-              findRegexForThisSubtitle = new RegExp(
-                currentFindText,
-                regexFlags
-              );
-            } else if (currentIsMatchFullWord) {
-              findRegexForThisSubtitle = new RegExp(
-                `\\b${escapeRegExp(currentFindText)}\\b`,
-                regexFlags
-              );
-            } else {
-              findRegexForThisSubtitle = new RegExp(
-                escapeRegExp(currentFindText),
-                regexFlags
-              );
-            }
-          } catch (e) {
-            console.error("Invalid regex during replace:", e);
-            // Keep existing subtitle if regex is invalid
-            return subtitle;
-          }
-
-          // Test and replace using THIS instance.
-          // Need to check findRegexForThisSubtitle is not null
-          if (findRegexForThisSubtitle.test(subtitle.text)) {
-            // Reset lastIndex just before replace (belt-and-suspenders with new regex)
-            findRegexForThisSubtitle.lastIndex = 0;
-            const newText = subtitle.text.replace(
-              findRegexForThisSubtitle,
-              currentReplaceText
+    const newSubtitles = subtitles.map((subtitle) => {
+      // Use subtitles from context
+      // Check if this subtitle is selected
+      if (currentSelectedIds.has(subtitle.id)) {
+        // Use the captured selection
+        // Create a *NEW* regex instance *INSIDE* the map function for this specific subtitle.
+        const regexFlags = currentIsCaseSensitive ? "g" : "gi";
+        let findRegexForThisSubtitle: RegExp | null = null;
+        try {
+          if (currentIsRegexMode) {
+            findRegexForThisSubtitle = new RegExp(currentFindText, regexFlags);
+          } else if (currentIsMatchFullWord) {
+            findRegexForThisSubtitle = new RegExp(
+              `\\b${escapeRegExp(currentFindText)}\\b`,
+              regexFlags
             );
+          } else {
+            findRegexForThisSubtitle = new RegExp(
+              escapeRegExp(currentFindText),
+              regexFlags
+            );
+          }
+        } catch (e) {
+          console.error("Invalid regex during replace:", e);
+          // Keep existing subtitle if regex is invalid
+          return subtitle;
+        }
 
-            if (newText !== subtitle.text) {
-              changesMade = true;
-              return { ...subtitle, text: newText }; // Return updated subtitle
-            }
+        // Test and replace using THIS instance.
+        // Need to check findRegexForThisSubtitle is not null
+        if (findRegexForThisSubtitle.test(subtitle.text)) {
+          // Reset lastIndex just before replace (belt-and-suspenders with new regex)
+          findRegexForThisSubtitle.lastIndex = 0;
+          const newText = subtitle.text.replace(
+            findRegexForThisSubtitle,
+            currentReplaceText
+          );
+
+          if (newText !== subtitle.text) {
+            changesMade = true;
+            return { ...subtitle, text: newText }; // Return updated subtitle
           }
         }
-        // Return unchanged subtitle if not selected, regex invalid, or no match found
-        return subtitle;
-      });
-
-      // IMPORTANT: Only return the new array if changes were actually made
-      // This prevents pushing identical state onto the undo stack
-      if (changesMade) {
-        return newSubtitles;
       }
-      return currentSubtitles; // Return the original state if no changes
-    });
+      // Return unchanged subtitle if not selected, regex invalid, or no match found
+      return subtitle;
+    }); // End of map function
+
+    // IMPORTANT: Only call the context action if changes were actually made
+    // This prevents pushing identical state onto the undo stack
+    if (changesMade) {
+      replaceAllSubtitlesAction(newSubtitles); // Call context action
+    }
+    // --- End Refactored Replace Logic ---
 
     // Clear selection after initiating the state update
     setSelectedSubtitles(new Set());
