@@ -145,6 +145,10 @@ export default forwardRef(function WaveformVisualizer(
   // Use UUID as the key for the map
   const subtitleToRegionMap = useRef<Map<string, Region>>(new Map());
 
+  // Refs for requestAnimationFrame throttling
+  const animationFrameRef = useRef<number | null>(null);
+  const latestTimeRef = useRef<number>(currentTime);
+
   // Load media file into wavesurfer
   useEffect(() => {
     if (mediaFile) {
@@ -314,12 +318,56 @@ export default forwardRef(function WaveformVisualizer(
     }
   }, [wavesurfer, onSeek]);
 
-  // If the media player seeks, update the waveform progressß
+  // --- Throttled time update using requestAnimationFrame ---
+
+  // Update latestTimeRef whenever the currentTime prop changes
   useEffect(() => {
-    if (wavesurfer) {
-      wavesurfer.setTime(currentTime);
-    }
-  }, [wavesurfer, currentTime]);
+    latestTimeRef.current = currentTime;
+  }, [currentTime]);
+
+  // Effect to schedule the wavesurfer update using rAF
+  useEffect(() => {
+    if (!wavesurfer) return;
+
+    const updateWaveformTime = () => {
+      // Only update if the time has actually changed since the last frame
+      // and wavesurfer is ready (duration > 0) and not currently seeking internally
+      if (
+        wavesurfer &&
+        wavesurfer.getDuration() > 0 &&
+        !wavesurfer.isSeeking()
+      ) {
+        const currentWsTime = wavesurfer.getCurrentTime();
+        // Add a small tolerance (e.g., 50ms) to avoid fighting over tiny differences
+        // and prevent unnecessary updates if the time is already very close.
+        if (Math.abs(currentWsTime - latestTimeRef.current) > 0.05) {
+          // Check if the target time is within the duration bounds
+          const duration = wavesurfer.getDuration();
+          if (latestTimeRef.current >= 0 && latestTimeRef.current <= duration) {
+            try {
+              wavesurfer.setTime(latestTimeRef.current);
+            } catch (error) {
+              console.warn("wavesurfer.setTime failed:", error);
+            }
+          }
+        }
+      }
+      // Schedule the next frame
+      animationFrameRef.current = requestAnimationFrame(updateWaveformTime);
+    };
+
+    // Start the animation loop
+    animationFrameRef.current = requestAnimationFrame(updateWaveformTime);
+
+    // Cleanup function to cancel the animation frame on unmount or wavesurfer change
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [wavesurfer]); // Only depends on wavesurfer instance
+
+  // --- End Throttled time update ---
 
   // Handle play/pause with debounce
   const lastKeyPress = useRef(0);
