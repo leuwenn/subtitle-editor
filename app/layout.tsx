@@ -1,6 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,6 +50,19 @@ export default function RootLayout({
       >
         {children}
         <Toaster />
+        {/* Google Ads Tag */}
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=AW-10839665138"
+        />
+        <Script id="google-ads-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-10839665138');
+          `}
+        </Script>
       </body>
     </html>
   );
