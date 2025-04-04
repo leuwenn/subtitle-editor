@@ -77,9 +77,11 @@ export default function FaqPage() {
         </li>
       </ul>
       <p>
-        What I want is a free, no installation or account sign-up required,
+        And none of them is open-sourced, and the UIs are either too ugly or too
+        complex, which really lowers my morale when editing subtitles. What I
+        want is a free, no installation or account sign-up required,
         minimalistic editor with simple subtitle editing features and waveform
-        visualization.
+        visualization. So I built this one.
       </p>
       <h2 className="text-xl font-bold my-4">
         Will you actively maintain this app?

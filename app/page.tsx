@@ -438,7 +438,10 @@ function MainContent() {
             <div className="flex flex-col items-left text-lg  h-full text-gray-600 px-8 py-4 border-t-2 border-black">
               <p className="my-2">After loading the media and subtitles:</p>
               <ul className="list-disc list-inside">
-                <li>Click the subtitle text or time stamps to edit.</li>
+                <li>
+                  Click the subtitle text or time stamps to edit. Hit{" "}
+                  <kbd>tab</kbd> to edit the current subtitle text.
+                </li>
                 <li>
                   When editing a subtitle text, press <kbd>shift</kbd> +{" "}
                   <kbd>enter</kbd> to split the subtitle into two.
