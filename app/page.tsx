@@ -1,3 +1,5 @@
+"use client"; // Ensure this is the very first line
+
 import type { Metadata } from "next"; // Import Metadata type
 
 // Add specific metadata for the main editor page
@@ -16,8 +18,6 @@ export const metadata: Metadata = {
     "subtitles",
   ],
 };
-
-("use client"); // Ensure correct formatting
 
 import CustomControls from "@/components/custom-controls";
 import FindReplace from "@/components/find-replace";
