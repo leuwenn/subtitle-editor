@@ -1,24 +1,5 @@
 "use client"; // Ensure this is the very first line
 
-import type { Metadata } from "next"; // Import Metadata type
-
-// Add specific metadata for the main editor page
-export const metadata: Metadata = {
-  title: "SRT Subtitle Editor", // This will use the template from layout.tsx
-  description:
-    "Free online tool to edit, create, and synchronize SRT subtitle files. Features waveform visualization, video preview, find/replace, and undo/redo.",
-  keywords: [
-    "subtitle editor",
-    "srt editor",
-    "caption editor",
-    "online",
-    "free",
-    "open source",
-    "create srt",
-    "subtitles",
-  ],
-};
-
 import CustomControls from "@/components/custom-controls";
 import FindReplace from "@/components/find-replace";
 import SubtitleList from "@/components/subtitle-list";
