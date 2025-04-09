@@ -229,8 +229,8 @@ function MainContent() {
       <nav className="h-[6vh] border-black border-b-2 flex items-center px-12 justify-between">
         <h1 className="text-lg font-semibold">Subtitle Editor</h1>
         <div className="flex gap-4 items-center">
-          <Link href="/faq" target="_blank">
-            <Button variant="ghost" className="cursor-pointer">
+          <Link href="/faq" target="_blank" aria-label="Frequently Asked Questions">
+            <Button variant="ghost" className="cursor-pointer" aria-label="Frequently Asked Questions">
               <QuestionMarkCircledIcon />
             </Button>
           </Link>
@@ -243,6 +243,7 @@ function MainContent() {
                   disabled={!canUndoSubtitles}
                   onClick={undoSubtitles}
                   className="cursor-pointer"
+                  aria-label="Undo"
                 >
                   <IconArrowBack />
                 </Button>
@@ -258,6 +259,7 @@ function MainContent() {
                   disabled={!canRedoSubtitles}
                   onClick={redoSubtitles}
                   className="cursor-pointer"
+                  aria-label="Redo"
                 >
                   <IconArrowForward />
                 </Button>
