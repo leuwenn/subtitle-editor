@@ -283,6 +283,7 @@ export default function SubtitleItem({
             <div className="flex-1">
               {editingSubtitleUuid === subtitle.uuid ? (
                 <Textarea
+                  className="w-full px-2 h-4" // Adjust height as needed
                   ref={textAreaRef} // Assign ref
                   value={editText}
                   onChange={(e) => setEditText(e.target.value)}
@@ -299,22 +300,20 @@ export default function SubtitleItem({
                       e.stopPropagation();
                     }
 
-                    // Check SHIFT + ENTER for split
-                    if (e.key === "Enter" && e.shiftKey) {
-                      e.preventDefault();
-                      const caretPos = e.currentTarget.selectionStart;
-                      const totalLen = e.currentTarget.value.length;
-                      splitSubtitleAction(subtitle.id, caretPos, totalLen);
-                      setEditingSubtitleUuid(null); // Exit edit mode after split
-                      return;
-                    }
-
                     // Handle normal Enter key to confirm edit
-                    if (e.key === "Enter" && !e.shiftKey) {
+                    if (e.key === "Enter") {
                       e.preventDefault(); // Prevent default newline behavior
                       if (editText !== subtitle.text) {
                         updateSubtitleTextAction(subtitle.id, editText);
                       }
+
+                      // Check SHIFT + ENTER for split
+                      if (e.shiftKey) {
+                        const caretPos = e.currentTarget.selectionStart;
+                        const totalLen = e.currentTarget.value.length;
+                        splitSubtitleAction(subtitle.id, caretPos, totalLen);
+                      }
+
                       setEditingSubtitleUuid(null); // Exit edit mode
                     } else if (e.key === "Escape") {
                       e.preventDefault();
@@ -323,7 +322,6 @@ export default function SubtitleItem({
                       setEditingSubtitleUuid(null); // Exit edit mode
                     }
                   }}
-                  className="w-full px-2 h-4" // Adjust height as needed
                 />
               ) : (
                 <button

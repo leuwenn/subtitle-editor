@@ -22,7 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import VideoPlayer from "@/components/video-player";
+// VideoPlayer is now dynamically imported below
 import {
   SubtitleProvider,
   useSubtitleContext,
@@ -38,12 +38,17 @@ import {
   IconArrowBack,
   IconArrowForward,
   IconBadgeCc,
+  IconKeyboard,
 } from "@tabler/icons-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 // Import useState
 import { useEffect, useRef, useState } from "react";
-import { v4 as uuidv4 } from "uuid"; // Import uuid
+import { v4 as uuidv4 } from "uuid";
+
+const VideoPlayer = dynamic(() => import("@/components/video-player"), {
+  ssr: false, // Disable server-side rendering
+});
 
 const WaveformVisualizer = dynamic(
   () => import("@/components/waveform-visualizer"),
@@ -229,8 +234,16 @@ function MainContent() {
       <nav className="h-[6vh] border-black border-b-2 flex items-center px-12 justify-between">
         <h1 className="text-lg font-semibold">Subtitle Editor</h1>
         <div className="flex gap-4 items-center">
-          <Link href="/faq" target="_blank" aria-label="Frequently Asked Questions">
-            <Button variant="ghost" className="cursor-pointer" aria-label="Frequently Asked Questions">
+          <Link
+            href="/faq"
+            target="_blank"
+            aria-label="Frequently Asked Questions"
+          >
+            <Button
+              variant="ghost"
+              className="cursor-pointer"
+              aria-label="Frequently Asked Questions"
+            >
               <QuestionMarkCircledIcon />
             </Button>
           </Link>
@@ -368,7 +381,7 @@ function MainContent() {
                       }}
                     />
                   </Label>
-                  <p className="text-xl my-4">Or</p>
+                  <p className="text-xl my-4">or</p>
                   <button
                     type="button"
                     onClick={() =>
@@ -437,34 +450,47 @@ function MainContent() {
               />
             </>
           ) : (
-            <div className="flex flex-col items-left text-lg  h-full text-gray-600 px-8 py-4 border-t-2 border-black">
-              <p className="my-2">After loading the media and subtitles:</p>
-              <ul className="list-disc list-inside">
-                <li>
-                  Click the subtitle text or time stamps to edit. Hit{" "}
-                  <kbd>tab</kbd> to edit the current subtitle text.
-                </li>
-                <li>
-                  When editing a subtitle text, press <kbd>shift</kbd> +{" "}
-                  <kbd>enter</kbd> to split the subtitle into two.
-                </li>
-                <li>Click the icons to add, merge or delete subtitles.</li>
-                <li>
-                  Drag the dashed borders on the waveform to change the
-                  subtitles' time stamps.
-                </li>
-                <li>
-                  Press <kbd>ctrl</kbd> + <kbd>z</kbd> (Windows) or{" "}
-                  <kbd>&#8984;</kbd> + <kbd>z</kbd> (Mac) to undo, and{" "}
-                  <kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>z</kbd> (Windows) or{" "}
-                  <kbd>&#8984;</kbd> + <kbd>shift</kbd> + <kbd>z</kbd> (Mac) to
-                  redo.
-                </li>
-                <li>
-                  Remember to click "Save SRT" to save the subtitles after you
-                  finish editing!
-                </li>
-              </ul>
+            <div className="grid grid-cols-2 items-left h-full text-gray-600 px-8 py-4 border-t-2 border-black">
+              <div className="text-lg text-gray-600 p-4">
+                <p className="">After loading the subtitles and video.</p>
+                <ul className="list-disc list-inside my-2">
+                  <li>Click the subtitle text or time stamps to edit.</li>
+                  <li>Click the icons to add, merge or delete subtitles.</li>
+                  <li>
+                    Drag the dashed borders on the waveform to change the
+                    subtitles' time stamps.
+                  </li>
+
+                  <li>
+                    Remember to click "Save SRT" to save the subtitles after you
+                    finish editing!
+                  </li>
+                </ul>
+              </div>
+              <div className="p-4">
+                <h3 className="text-lg inline-flex items-center">
+                  <IconKeyboard className="mr-2" />
+                  Shortcuts:
+                </h3>
+                <ul className="list-disc list-inside px-2">
+                  <li>
+                    <kbd>tab</kbd> to edit the current subtitle text.
+                  </li>
+                  <li>
+                    <kbd>shift</kbd> + <kbd>enter</kbd> to split the subtitle at
+                    the cursor position.
+                  </li>
+                  <li>
+                    <kbd>ctrl</kbd> + <kbd>z</kbd> (Windows) or{" "}
+                    <kbd>&#8984;</kbd> + <kbd>z</kbd> (Mac) to undo
+                  </li>
+                  <li>
+                    <kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>z</kbd> (Windows)
+                    or <kbd>&#8984;</kbd> + <kbd>shift</kbd> + <kbd>z</kbd>{" "}
+                    (Mac) to redo.
+                  </li>
+                </ul>
+              </div>
             </div>
           )}
         </div>
