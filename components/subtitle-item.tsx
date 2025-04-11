@@ -163,7 +163,7 @@ export default function SubtitleItem({
           }}
           className={`px-4 py-2 border-b border-gray-800 hover:bg-amber-50 cursor-pointer grid grid-cols-[1rem_7rem_1fr] gap-4 items-center ${
             timeToSeconds(subtitle.startTime) <= currentTime &&
-            timeToSeconds(subtitle.endTime) >= currentTime
+            timeToSeconds(subtitle.endTime) > currentTime
               ? "bg-cyan-50"
               : ""
           }`}

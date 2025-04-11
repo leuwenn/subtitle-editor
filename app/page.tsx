@@ -451,7 +451,7 @@ function MainContent() {
             </>
           ) : (
             <div className="grid grid-cols-2 items-left h-full text-gray-600 px-8 py-4 border-t-2 border-black">
-              <div className="text-lg text-gray-600 p-4">
+              <div className="text-lg text-gray-600 p-2">
                 <p className="">After loading the subtitles and video.</p>
                 <ul className="list-disc list-inside my-2">
                   <li>Click the subtitle text or time stamps to edit.</li>
@@ -467,24 +467,33 @@ function MainContent() {
                   </li>
                 </ul>
               </div>
-              <div className="p-4">
+              <div className="p-2">
                 <h3 className="text-lg inline-flex items-center">
                   <IconKeyboard className="mr-2" />
                   Shortcuts:
                 </h3>
                 <ul className="list-disc list-inside px-2">
                   <li>
+                    <kbd>space</kbd> to play/pause the video.
+                  </li>
+                  <li>
                     <kbd>tab</kbd> to edit the current subtitle text.
                   </li>
                   <li>
-                    <kbd>shift</kbd> + <kbd>enter</kbd> to split the subtitle at
-                    the cursor position.
+                    <kbd>↑</kbd> and <kbd>↓</kbd> to jump to the previous/next
+                    subtitle.
+                  </li>
+                  <li>
+                    <kbd>shift</kbd> + <kbd>enter</kbd> to split the subtitle
+                    text at the cursor position when editing it.
+                  </li>
+                  <li>
+                    <kbd>shift</kbd> + <kbd>backspace</kbd> to merge the current
+                    subtitle with the previous one.
                   </li>
                   <li>
                     <kbd>ctrl</kbd> + <kbd>z</kbd> (Windows) or{" "}
-                    <kbd>&#8984;</kbd> + <kbd>z</kbd> (Mac) to undo
-                  </li>
-                  <li>
+                    <kbd>&#8984;</kbd> + <kbd>z</kbd> (Mac) to undo,{" "}
                     <kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>z</kbd> (Windows)
                     or <kbd>&#8984;</kbd> + <kbd>shift</kbd> + <kbd>z</kbd>{" "}
                     (Mac) to redo.
