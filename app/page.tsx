@@ -367,9 +367,9 @@ function MainContent() {
                   setEditingSubtitleUuid={setEditingSubtitleUuid}
                 />
               ) : (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground rounded-sm cursor-pointer">
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground rounded-sm">
                   <Label className="cursor-pointer text-xl hover:text-blue-500 underline">
-                    Upload an SRT file
+                    Load an SRT file
                     <Input
                       type="file"
                       className="hidden"
@@ -462,7 +462,7 @@ function MainContent() {
                   </li>
 
                   <li>
-                    Remember to click "Save SRT" to save the subtitles after you
+                    Remember to click "Save SRT" to save the subtitles when you
                     finish editing!
                   </li>
                 </ul>
