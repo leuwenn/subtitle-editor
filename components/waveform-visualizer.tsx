@@ -477,12 +477,12 @@ export default forwardRef(function WaveformVisualizer(
     });
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Avoid infinite rendering regions
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Avoid infinite rendering regions - We need to re-run when subtitles change.
   useEffect(() => {
-    if (!wavesurfer || isLoading) return;
+    if (!wavesurfer || isLoading || !wavesurfer.getDuration()) return;
     // When subtitles change, update the regions
     initRegions();
-  }, [subtitles.length]);
+  }, [subtitles, wavesurfer, isLoading]);
 
   // If subtitle time stamps change, update the regions
   // biome-ignore lint/correctness/useExhaustiveDependencies: For unknown reasons, if I include `onPlayPause` in the dependencies, the regions are not rendered at all.
