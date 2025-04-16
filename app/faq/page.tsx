@@ -16,8 +16,8 @@ export default function FaqPage() {
       <h2 className="text-xl font-bold">Why another subtitle editor?</h2>
       <p className="my-4">
         Yes I know, there are many subtitle editors out there. But I found that
-        none of them is ideal for me so I built this one. These are the ones
-        they I have tried and what I think are missing in them:
+        none of them is ideal for me so I built this one. Below are the editors
+        that I have tried and what I think are missing in them:
       </p>
       <ul className="list-disc mx-6 my-2">
         <li>
@@ -40,11 +40,11 @@ export default function FaqPage() {
           >
             Subtitle Edit
           </a>{" "}
-          is a great option and the closest one to what I need. It supports
-          waveform visualization, easy preview and editing, and even AI
-          transcriptions. But it is a desktop software which requires
-          installation, and it doesn't support Mac. I have to use a Windows or
-          Linux device to edit subtitles.
+          is a great option and has all features I need. It supports waveform
+          visualization, easy preview and editing, and even AI transcriptions.
+          But it is a desktop software which requires installation, and it
+          doesn't support Mac. I have to use a Windows or Linux device to edit
+          subtitles.
         </li>
         <li>
           <a
@@ -55,7 +55,7 @@ export default function FaqPage() {
           </a>{" "}
           is similar to Subtitle Edit. It is a desktop software suitable for
           more complex subtitle editing. Also I found waveform visualizer not
-          very intuitive. (Btw these desktop software have 1990s-style UI which
+          very intuitive. (Btw these desktop softwares have 1990s-style UI which
           really demoralizes me)
         </li>
         <li>
@@ -77,12 +77,19 @@ export default function FaqPage() {
         </li>
       </ul>
       <p>
-        And none of them is open-sourced, and the UIs are either too ugly or too
-        complex, which really lowers my morale when editing subtitles. What I
-        want is a free, no installation or account sign-up required,
-        minimalistic editor with simple subtitle editing features and waveform
-        visualization. So I built this one.
+        None of them is open-sourced, and the UIs are either too ugly or too
+        complex, which really bothers my subtitle editing experience. What I
+        want is an editor that is:
       </p>
+      <ol className="list-decimal mx-6 my-2">
+        <li>Permanently free</li>
+        <li>Open-sourced</li>
+        <li>Fully web-based, no download or installation required</li>
+        <li>No account sign-up or log-in required</li>
+        <li>Minimalist UX</li>
+        <li>Has waveform visualization</li>
+      </ol>
+      <p>So I built this one.</p>
       <h2 className="text-xl font-bold my-4">
         Will you actively maintain this app?
       </h2>
