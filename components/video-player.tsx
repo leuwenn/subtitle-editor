@@ -36,13 +36,7 @@ export default function VideoPlayer({
   const [mediaUrl, setMediaUrl] = useState<string>("");
   const [vttUrl, setVttUrl] = useState("");
   const playerRef = useRef<ReactPlayer>(null);
-  const [isVideo, setIsVideo] = useState(false);
-
-  useEffect(() => {
-    if (mediaFile) {
-      setIsVideo(mediaFile.type.startsWith("video/"));
-    }
-  }, [mediaFile]);
+  const timeToRestore = useRef<number | null>(null); // Ref to store time before remount
 
   const lastPlayStateChange = useRef<number>(0);
   const DEBOUNCE_TIME = 200; // 200ms debounce
@@ -75,44 +69,30 @@ export default function VideoPlayer({
   }, [mediaFile]);
 
   useEffect(() => {
+    // Only generate VTT URL if media is loaded
+    if (!mediaUrl) {
+      setVttUrl(""); // Clear VTT URL if no media
+      return;
+    }
+
     // 1) Convert subtitles to a fresh .vtt Blob URL
     const srtString = subtitlesToSrtString(subtitles);
     const vttString = srtToVtt(srtString);
     const blob = new Blob([vttString], { type: "text/vtt" });
     const url = URL.createObjectURL(blob);
-    setVttUrl(url);
 
-    // 2) Force the DOM to use a fresh <track src="...">
-    const videoEl = playerRef.current?.getInternalPlayer();
-
-    // Only do this if we're in the HTML5 player (ReactPlayer returns an <HTMLVideoElement>)
-    if (videoEl && videoEl.tagName === "VIDEO") {
-      // Remove all old <track> elements
-      const existingTracks = videoEl.getElementsByTagName("track");
-      while (existingTracks.length > 0) {
-        existingTracks[0].remove();
-      }
-
-      // Create a new <track> element and append it
-      const newTrack = document.createElement("track");
-      newTrack.kind = "subtitles";
-      newTrack.label = "Subtitles";
-      newTrack.srclang = "en";
-      newTrack.src = url;
-      newTrack.default = true;
-
-      // Wait for the track to load, then show it
-      newTrack.addEventListener("load", () => {
-        newTrack.track.mode = "showing";
-      });
-
-      videoEl.appendChild(newTrack);
+    // Capture current time before triggering remount
+    if (playerRef.current) {
+      timeToRestore.current = playerRef.current.getCurrentTime();
     }
 
+    setVttUrl(url); // This will trigger remount via key={vttUrl}
+
+    // Clean up the object URL when the component unmounts or subtitles/media change
     return () => {
       URL.revokeObjectURL(url);
     };
-  }, [subtitles]);
+  }, [subtitles, mediaUrl]); // Add mediaUrl dependency
 
   if (!mediaUrl) {
     return (
@@ -145,6 +125,7 @@ export default function VideoPlayer({
   return (
     <div className="w-full h-full flex items-center justify-center bg-black overflow-hidden">
       <ReactPlayer
+        key={vttUrl} // Add key here
         ref={playerRef}
         url={mediaUrl}
         width="100%"
@@ -159,6 +140,14 @@ export default function VideoPlayer({
         onPlay={() => onPlayPause(true)}
         onPause={() => onPlayPause(false)}
         onDuration={onDuration}
+        // Restore time using onReady after remount
+        onReady={(player) => {
+          playerRef.current = player; // Ensure ref is set
+          if (timeToRestore.current !== null) {
+            player.seekTo(timeToRestore.current, "seconds");
+            timeToRestore.current = null; // Reset after restoring
+          }
+        }}
         playing={isPlaying}
         playbackRate={playbackRate}
         config={{
