@@ -1,5 +1,7 @@
 # Subtitle Editor
 
+See https://subtitle-editor.org/faq
+
 Tech stack of this subtitle editor:
 
 - NextJS 15 + React 19 as framework
