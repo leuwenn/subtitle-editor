@@ -60,6 +60,7 @@ const getContentHtml = (
 
 const styleRegionHandles = (region: Region) => {
   // I have to do all these hakcy styling because the wavesurfer api doesn't allow custom styling regions
+  if (!region.element) return;
   const leftHandleDiv = region.element.querySelector(
     'div[part="region-handle region-handle-left"]'
   ) as HTMLDivElement;
