@@ -452,7 +452,7 @@ function MainContent() {
           ) : (
             <div className="grid grid-cols-2 items-left h-full text-gray-600 px-8 py-4 border-t-2 border-black">
               <div className="text-lg text-gray-600 p-2">
-                <p className="">After loading the subtitles and video.</p>
+                <p className="">After loading the subtitles and video:</p>
                 <ul className="list-disc list-inside my-2">
                   <li>Click the subtitle text or time stamps to edit.</li>
                   <li>Click the icons to add, merge or delete subtitles.</li>

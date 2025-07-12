@@ -17,10 +17,10 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://subtitle-editor.org"),
   title: {
     template: "%s | Subtitle Editor", // Page title will replace %s
-    default: "Subtitle Editor - Free, Open-source SRT Editing Tool", // Default title for root layout
+    default: "Subtitle Editor - Permanently Free, Open-source, Fully Web-based SRT Editing Tool", // Default title for root layout
   },
   description:
-    "Edit, create, and synchronize SRT subtitle files and captions easily with this free, open-source, web-based editor. Features video preview and waveform visualization. No signup required.",
+    "Edit, create, and align SRT subtitle and captions files easily with this free, open-source, web-based editor. Features video preview and waveform visualization. No signup required.",
   icons: "/badge-cc.svg", // Set the favicon
   // Add Open Graph tags
   openGraph: {
