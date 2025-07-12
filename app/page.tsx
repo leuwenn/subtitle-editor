@@ -64,6 +64,8 @@ interface WaveformRef {
 // Define the main content component that will consume the context
 function MainContent() {
   const waveformRef = useRef<WaveformRef>(null);
+  const mediaFileInputRef = useRef<HTMLInputElement>(null);
+  const srtFileInputRef = useRef<HTMLInputElement>(null);
   // Get subtitle state and actions from context
   const {
     subtitles,
@@ -286,6 +288,7 @@ function MainContent() {
 
           <Label className="cursor-pointer">
             <Input
+              ref={mediaFileInputRef}
               type="file"
               className="hidden"
               accept="audio/*,video/*"
@@ -298,12 +301,11 @@ function MainContent() {
                   setMediaFileName(file.name);
                 }, 0);
               }}
-              id="media-file-input"
             />
             <Button
               variant="secondary"
               onClick={() => {
-                document.getElementById("media-file-input")?.click();
+                mediaFileInputRef.current?.click();
               }}
               className="bg-cyan-300 hover:bg-cyan-500 hover:text-white text-black rounded-sm cursor-pointer"
             >
@@ -315,16 +317,16 @@ function MainContent() {
           </Label>
           <Label className="cursor-pointer">
             <Input
+              ref={srtFileInputRef}
               type="file"
               className="hidden"
               accept=".srt"
               onChange={handleSrtFileSelect}
-              id="srt-file-input"
             />
             <Button
               variant="secondary"
               onClick={() => {
-                document.getElementById("srt-file-input")?.click();
+                srtFileInputRef.current?.click();
               }}
               className="hover:bg-amber-500 hover:text-white bg-amber-300 text-black rounded-sm cursor-pointer"
             >
@@ -452,9 +454,11 @@ function MainContent() {
           ) : (
             <div className="grid grid-cols-2 items-left h-full text-gray-600 px-8 py-4 border-t-2 border-black">
               <div className="text-lg text-gray-600 p-2">
-                <p className="">After loading the subtitles and video:</p>
+                <p className="">After loading the subtitles and media file:</p>
                 <ul className="list-disc list-inside my-2">
-                  <li>Click the subtitle text or time stamps to edit.</li>
+                  <li>
+                    Click the subtitle text or timestamps to edit your captions.
+                  </li>
                   <li>Click the icons to add, merge or delete subtitles.</li>
                   <li>
                     Drag the dashed borders on the waveform to change the
@@ -468,10 +472,10 @@ function MainContent() {
                 </ul>
               </div>
               <div className="p-2">
-                <h3 className="text-lg inline-flex items-center">
+                <h2 className="text-lg inline-flex items-center">
                   <IconKeyboard className="mr-2" />
                   Shortcuts:
-                </h3>
+                </h2>
                 <ul className="list-disc list-inside px-2">
                   <li>
                     <kbd>space</kbd> to play/pause the video.

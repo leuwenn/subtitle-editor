@@ -12,6 +12,42 @@ export const metadata: Metadata = {
 export default function FaqPage() {
   return (
     <div className="container mx-auto py-12">
+      {/* biome-ignore lint/security/noDangerouslySetInnerHTML: This is required for JSON-LD structured data and is safe in this context. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "Why another subtitle editor?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Yes I know, there are many subtitle editors out there. But I found that none of them is ideal for me so I built this one. What I want is an editor that is: Permanently free, Open-sourced, Fully web-based, no download or installation required, No account sign-up or log-in required, Minimalist UX, Has waveform visualization.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Will you actively maintain this app?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "This app is open sourced on GitHub. I will check issues and accept PRs regularly, but I am quite busy these days so I may not have time to develop new features. This is a community project and your contributions are always welcomed!",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Have feedback?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Feel free to open an issue on GitHub. I want to keep this app as minimalistic as possible, so these features are non-goals and I don't plan to add them: Account registration, Cloud storage, Collaborative editing, AI transcription, Translation, Complex subtitle editing such as VTT files.",
+                },
+              },
+            ],
+          }),
+        }}
+      />
       <h1 className="text-3xl font-bold mb-6">Frequently Asked Questions</h1>
       <h2 className="text-xl font-bold">Why another subtitle editor?</h2>
       <p className="my-4">
