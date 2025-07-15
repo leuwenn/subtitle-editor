@@ -26,15 +26,15 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.523.0",
-    "motion": "^12.19.1",
-    "next": "^15.3.4",
+    "motion": "^12.23.5",
+    "next": "^15.4.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-player": "^2.16.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.1.0",
-    "wavesurfer.js": "^7.9.8"
+    "wavesurfer.js": "^7.9.9"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.5",
