@@ -1,7 +1,5 @@
 "use client";
 
-import { useSubtitleContext } from "@/context/subtitle-context"; // Import context
-import { secondsToTime, timeToSeconds } from "@/lib/utils";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useWavesurfer } from "@wavesurfer/react";
 import {
@@ -17,6 +15,8 @@ import RegionsPlugin, {
   type Region,
 } from "wavesurfer.js/dist/plugins/regions.esm.js";
 import Timeline from "wavesurfer.js/dist/plugins/timeline.esm.js";
+import { useSubtitleContext } from "@/context/subtitle-context"; // Import context
+import { secondsToTime, timeToSeconds } from "@/lib/utils";
 
 const HANDLE_COLOR = "#f59e0b";
 const REGION_COLOR = "#fcd34d40";
@@ -117,12 +117,7 @@ interface WaveformVisualizerProps {
 }
 
 export default forwardRef(function WaveformVisualizer(
-  {
-    mediaFile,
-    isPlaying,
-    onSeek,
-    onPlayPause,
-  }: WaveformVisualizerProps,
+  { mediaFile, isPlaying, onSeek, onPlayPause }: WaveformVisualizerProps,
   // Update the ref type to expect uuid (string) and the new setWaveformTime method
   ref: ForwardedRef<{
     scrollToRegion: (uuid: string) => void;
@@ -224,27 +219,25 @@ export default forwardRef(function WaveformVisualizer(
    */
 
   // Accept uuid instead of id
-  const scrollToRegion = (uuid: string) => {
-    if (!wavesurfer) return;
-    const region = subtitleToRegionMap.current.get(uuid); // Use uuid to get region
-    if (region) {
-      const duration = wavesurfer.getDuration();
-      const containerWidth = containerRef.current?.clientWidth || 0;
-      const pixelsPerSecond = containerWidth / duration;
-      const scrollPosition =
-        region.start * pixelsPerSecond - containerWidth / 2;
-      wavesurfer.setScroll(Math.max(0, scrollPosition));
-      // Also seek to this position
-      wavesurfer.setTime(region.start);
-      onSeek(region.start);
-    }
-  };
-
   // Expose methods via ref
   useImperativeHandle(
     ref,
     () => ({
-      scrollToRegion,
+      scrollToRegion: (uuid: string) => {
+        if (!wavesurfer) return;
+        const region = subtitleToRegionMap.current.get(uuid); // Use uuid to get region
+        if (region) {
+          const duration = wavesurfer.getDuration();
+          const containerWidth = containerRef.current?.clientWidth || 0;
+          const pixelsPerSecond = containerWidth / duration;
+          const scrollPosition =
+            region.start * pixelsPerSecond - containerWidth / 2;
+          wavesurfer.setScroll(Math.max(0, scrollPosition));
+          // Also seek to this position
+          wavesurfer.setTime(region.start);
+          onSeek(region.start);
+        }
+      },
       setWaveformTime: (time: number) => {
         if (!wavesurfer || wavesurfer.isSeeking()) return;
 
@@ -262,7 +255,7 @@ export default forwardRef(function WaveformVisualizer(
         }
       },
     }),
-    [wavesurfer, scrollToRegion] // Add dependencies
+    [wavesurfer, onSeek] // Add dependencies
   );
 
   // Handle zoom level based on duration
@@ -399,9 +392,9 @@ export default forwardRef(function WaveformVisualizer(
    * For the first action, we only need to update the target region content.
    * For the other 3 actions, we need to re-render the regions list.
    *
-   * And there is only 1 action from the wavefrom regions that requires the subtitle list
+   * And there is only 1 action from the waveform regions that requires the subtitle list
    * to re-render:
-   * 1. Update the subtitle timing by draging the region box
+   * 1. Update the subtitle timing by dragging the region box
    *
    * And we only need to re-render the target region box.
    * */

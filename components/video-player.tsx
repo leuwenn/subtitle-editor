@@ -1,9 +1,9 @@
 "use client";
 
-import { useSubtitleContext } from "@/context/subtitle-context"; // Import context
-import { srtToVtt, subtitlesToSrtString } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
+import { useSubtitleContext } from "@/context/subtitle-context"; // Import context
+import { srtToVtt, subtitlesToSrtString } from "@/lib/utils";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 

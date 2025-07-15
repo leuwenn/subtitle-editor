@@ -1,3 +1,6 @@
+import { PauseIcon, PlayIcon } from "@radix-ui/react-icons";
+import type React from "react";
+import { memo, useRef, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,8 +15,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { secondsToTime } from "@/lib/utils";
-import { PauseIcon, PlayIcon } from "@radix-ui/react-icons";
-import React, { memo, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { Slider } from "./ui/slider";
 
@@ -50,6 +51,12 @@ const TimeDisplayAndSlider = memo(
       <>
         <div
           ref={sliderRef}
+          role="slider"
+          aria-valuemin={0}
+          aria-valuemax={duration}
+          aria-valuenow={playbackTime}
+          aria-valuetext={`Time: ${secondsToTime(playbackTime)}`}
+          tabIndex={0}
           className="w-full relative"
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
