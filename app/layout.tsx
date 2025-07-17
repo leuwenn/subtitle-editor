@@ -1,7 +1,8 @@
-import { Toaster } from "@/components/ui/toaster";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { useId } from "react";
+import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +18,8 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://subtitle-editor.org"),
   title: {
     template: "%s | Subtitle Editor", // Page title will replace %s
-    default: "Subtitle Editor - Permanently Free, Open-source, Fully Web-based SRT Editing Tool", // Default title for root layout
+    default:
+      "Subtitle Editor - Permanently Free, Open-source, Fully Web-based SRT Editing Tool", // Default title for root layout
   },
   description:
     "Edit, create, and align SRT subtitle and captions files easily with this free, open-source, web-based editor. Features video preview and waveform visualization. No signup required.",
@@ -43,6 +45,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const googleAdsId = useId();
   return (
     <html lang="en">
       <body
@@ -55,7 +58,7 @@ export default function RootLayout({
           strategy="afterInteractive"
           src="https://www.googletagmanager.com/gtag/js?id=AW-10839665138"
         />
-        <Script id="google-ads-init" strategy="afterInteractive">
+        <Script id={googleAdsId} strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
@@ -63,6 +66,11 @@ export default function RootLayout({
             gtag('config', 'AW-10839665138');
           `}
         </Script>
+        <Script
+          strategy="worker"
+          src="https://cloud.umami.is/script.js"
+          data-website-id="505c9992-e14c-483a-aa4c-542fb097c809"
+        />
       </body>
     </html>
   );
