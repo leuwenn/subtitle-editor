@@ -1,20 +1,20 @@
 import type { Metadata } from "next"; // Import Metadata type
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 // Add specific metadata for the FAQ page
 export const metadata: Metadata = {
-  title: "FAQ", // Will use template: "FAQ | Subtitle Editor Online"
-  description:
-    "Frequently asked questions about the subtitle editor, including features, comparisons, maintenance, and feedback.",
+	title: "FAQ", // Will use template: "FAQ | Subtitle Editor Online"
+	description:
+		"Frequently asked questions about the subtitle editor, including features, comparisons, maintenance, and feedback.",
 };
 
 export default function FaqPage() {
-  return (
+	return (
     <div className="container mx-auto py-12">
-      {/* biome-ignore lint/security/noDangerouslySetInnerHTML: This is required for JSON-LD structured data and is safe in this context. */}
       <script
         type="application/ld+json"
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: This is required for JSON-LD structured data and is safe in this context. */}
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",

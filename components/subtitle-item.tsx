@@ -1,12 +1,12 @@
+import { IconFold, IconPlus, IconTrash } from "@tabler/icons-react";
+import { motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useSubtitleContext } from "@/context/subtitle-context"; // Import context
 import { useToast } from "@/hooks/use-toast";
 import { isValidTime, timeToSeconds } from "@/lib/utils";
 import type { Subtitle } from "@/types/subtitle";
-import { IconFold, IconPlus, IconTrash } from "@tabler/icons-react";
-import { motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import {
   Tooltip,
@@ -31,7 +31,6 @@ interface SubtitleItemProps {
 export default function SubtitleItem({
   subtitle,
   nextSubtitle,
-  index,
   isLastItem,
   currentTime,
   editingSubtitleUuid,
@@ -148,6 +147,7 @@ export default function SubtitleItem({
       transition={{ duration: 0.1 }}
     >
       <TooltipProvider>
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: Interactive div */}
         <div
           id={`subtitle-${subtitle.uuid}`}
           onClick={() => onScrollToRegion(subtitle.uuid)}
