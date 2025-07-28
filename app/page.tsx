@@ -235,7 +235,7 @@ function MainContent() {
   return (
     <div className="flex flex-col h-screen">
       <nav className="h-[6vh] border-black border-b-2 flex items-center px-12 justify-between">
-        <h1 className="text-lg font-semibold">Subtitle Editor</h1>
+        <h1 className="text-lg font-semibold">Éditeur de sous-titre Ouideo</h1>
         <div className="flex gap-4 items-center">
           <TooltipProvider>
             <Tooltip>
@@ -251,7 +251,7 @@ function MainContent() {
                   <IconArrowBack />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Undo</TooltipContent>
+              <TooltipContent>Annuler</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -267,7 +267,7 @@ function MainContent() {
                   <IconArrowForward />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Redo</TooltipContent>
+              <TooltipContent>Refaire</TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
@@ -319,7 +319,7 @@ function MainContent() {
               className="hover:bg-amber-500 hover:text-white bg-amber-300 text-black rounded-sm cursor-pointer"
             >
               <IconBadgeCc />
-              Load SRT
+              Charger SRT
             </Button>
           </Label>
 
@@ -329,7 +329,7 @@ function MainContent() {
             className="cursor-pointer"
           >
             <DownloadIcon />
-            Save SRT
+            Sauvegarder SRT
           </Button>
         </div>
       </nav>
@@ -359,7 +359,7 @@ function MainContent() {
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground rounded-sm">
                   <Label className="cursor-pointer text-xl hover:text-blue-500 underline">
-                    Load an SRT file
+                    Charger un fichier SRT
                     <Input
                       type="file"
                       className="hidden"
@@ -371,7 +371,7 @@ function MainContent() {
                       }}
                     />
                   </Label>
-                  <p className="text-xl my-4">or</p>
+                  <p className="text-xl my-4">ou</p>
                   <button
                     type="button"
                     onClick={() =>
@@ -382,13 +382,13 @@ function MainContent() {
                           id: 1,
                           startTime: "00:00:00,000",
                           endTime: "00:00:03,000",
-                          text: "New subtitle",
+                          text: "Nouveau sous-titre",
                         },
                       ])
                     }
                     className="cursor-pointer text-xl text-muted-foreground underline hover:text-blue-500"
                   >
-                    Start from scratch
+                    Commencer de zéro
                   </button>
                 </div>
               )}
@@ -444,53 +444,60 @@ function MainContent() {
           ) : (
             <div className="grid grid-cols-2 items-left h-full text-gray-600 px-8 py-4 border-t-2 border-black">
               <div className="text-lg text-gray-600 p-2">
-                <p className="">After loading the subtitles and media file:</p>
+                <p className="">
+                  Après avoir chargé les sous-titres et le fichier média :
+                </p>
                 <ul className="list-disc list-inside my-2">
                   <li>
-                    Click the subtitle text or timestamps to edit your captions.
+                    Cliquez sur le texte du sous-titre ou les horodatages pour
+                    modifier vos légendes.
                   </li>
-                  <li>Click the icons to add, merge or delete subtitles.</li>
                   <li>
-                    Drag the dashed borders on the waveform to change the
-                    subtitles' time stamps.
+                    Cliquez sur les icônes pour ajouter, fusionner ou supprimer
+                    des sous-titres.
+                  </li>
+                  <li>
+                    Faites glisser les bordures en pointillés sur la forme
+                    d'onde pour modifier les horodatages des sous-titres.
                   </li>
 
                   <li>
-                    Remember to click "Save SRT" to save the subtitles when you
-                    finish editing!
+                    N'oubliez pas de cliquer sur "Sauvegarder SRT" pour
+                    enregistrer les sous-titres lorsque vous terminez l'édition
+                    !
                   </li>
                 </ul>
               </div>
               <div className="p-2">
                 <h2 className="text-lg inline-flex items-center">
                   <IconKeyboard className="mr-2" />
-                  Shortcuts:
+                  Raccourcis :
                 </h2>
                 <ul className="list-disc list-inside px-2">
                   <li>
-                    <kbd>space</kbd> to play/pause the video.
+                    <kbd>espace</kbd> pour lire/mettre en pause la vidéo.
                   </li>
                   <li>
-                    <kbd>tab</kbd> to edit the current subtitle text.
+                    <kbd>tab</kbd> pour modifier le texte du sous-titre actuel.
                   </li>
                   <li>
-                    <kbd>↑</kbd> and <kbd>↓</kbd> to jump to the previous/next
-                    subtitle.
+                    <kbd>↑</kbd> et <kbd>↓</kbd> pour passer au sous-titre
+                    précédent/suivant.
                   </li>
                   <li>
-                    <kbd>shift</kbd> + <kbd>enter</kbd> to split the subtitle
-                    text at the cursor position when editing it.
+                    <kbd>shift</kbd> + <kbd>entrée</kbd> pour diviser le texte
+                    du sous-titre à la position du curseur lors de l'édition.
                   </li>
                   <li>
-                    <kbd>shift</kbd> + <kbd>backspace</kbd> to merge the current
-                    subtitle with the previous one.
+                    <kbd>shift</kbd> + <kbd>retour arrière</kbd> pour fusionner
+                    le sous-titre actuel avec le précédent.
                   </li>
                   <li>
-                    <kbd>ctrl</kbd> + <kbd>z</kbd> (Windows) or{" "}
-                    <kbd>&#8984;</kbd> + <kbd>z</kbd> (Mac) to undo,{" "}
+                    <kbd>ctrl</kbd> + <kbd>z</kbd> (Windows) ou{" "}
+                    <kbd>&#8984;</kbd> + <kbd>z</kbd> (Mac) pour annuler,{" "}
                     <kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>z</kbd> (Windows)
-                    or <kbd>&#8984;</kbd> + <kbd>shift</kbd> + <kbd>z</kbd>{" "}
-                    (Mac) to redo.
+                    ou <kbd>&#8984;</kbd> + <kbd>shift</kbd> + <kbd>z</kbd>{" "}
+                    (Mac) pour refaire.
                   </li>
                 </ul>
               </div>
@@ -505,15 +512,17 @@ function MainContent() {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Replace existing subtitles?</AlertDialogTitle>
+              <AlertDialogTitle>
+                Remplacer les sous-titres existants ?
+              </AlertDialogTitle>
               <AlertDialogDescription>
-                Loading a new SRT file will replace the current subtitles. Make
-                sure you have downloaded the current SRT first.
+                Charger un nouveau fichier SRT remplacera les sous-titres
+                actuels. Assurez-vous d'avoir d'abord téléchargé le SRT actuel.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setPendingSrtFile(null)}>
-                Cancel
+                Annuler
               </AlertDialogCancel>
               <AlertDialogAction
                 className="bg-red-600 hover:bg-red-500"
@@ -525,7 +534,7 @@ function MainContent() {
                   setShowOverwriteDialog(false);
                 }}
               >
-                Yes
+                Oui
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
