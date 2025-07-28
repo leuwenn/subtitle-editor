@@ -23,14 +23,14 @@ type SetStateAction<T> = T | ((prevState: T) => T);
  *  - A boolean indicating if redo is possible.
  */
 export function useUndoableState<T>(
-  initialState: T
+  initialState: T,
 ): [
   T,
   (newState: SetStateAction<T>) => void,
   () => void,
   () => void,
   boolean,
-  boolean
+  boolean,
 ] {
   const [history, setHistory] = useState<History<T>>({
     past: [],
@@ -59,7 +59,9 @@ export function useUndoableState<T>(
 
       // Add the previous present state to the past and trim it if it grows
       // beyond the configured limit to avoid unbounded memory usage
-      const newPast = [...currentHistory.past, previousPresent].slice(-MAX_HISTORY_LENGTH);
+      const newPast = [...currentHistory.past, previousPresent].slice(
+        -MAX_HISTORY_LENGTH,
+      );
 
       return {
         past: newPast,

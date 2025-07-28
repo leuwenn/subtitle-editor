@@ -54,7 +54,7 @@ const WaveformVisualizer = dynamic(
   () => import("@/components/waveform-visualizer"),
   {
     ssr: false, // Disable server-side rendering
-  }
+  },
 );
 
 interface WaveformRef {
@@ -92,7 +92,7 @@ function MainContent() {
   const [playbackRate, setPlaybackRate] = useState(1);
   // State to track which subtitle is being edited
   const [editingSubtitleUuid, setEditingSubtitleUuid] = useState<string | null>(
-    null
+    null,
   );
 
   const handleFileUpload = async (file: File) => {
@@ -104,7 +104,7 @@ function MainContent() {
   };
 
   const handleSrtFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -237,19 +237,6 @@ function MainContent() {
       <nav className="h-[6vh] border-black border-b-2 flex items-center px-12 justify-between">
         <h1 className="text-lg font-semibold">Subtitle Editor</h1>
         <div className="flex gap-4 items-center">
-          <Link
-            href="/faq"
-            target="_blank"
-            aria-label="Frequently Asked Questions"
-          >
-            <Button
-              variant="ghost"
-              className="cursor-pointer"
-              aria-label="Frequently Asked Questions"
-            >
-              <QuestionMarkCircledIcon />
-            </Button>
-          </Link>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

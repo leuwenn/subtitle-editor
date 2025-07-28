@@ -17,9 +17,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://subtitle-editor.org"),
   title: {
-    template: "%s | Subtitle Editor", // Page title will replace %s
-    default:
-      "Subtitle Editor - Permanently Free, Open-source, Fully Web-based SRT Editing Tool", // Default title for root layout
+    template: "%s | Éditeur de sous-titre Ouide", // Page title will replace %s
+    default: "Éditeur de sous-titre Ouide", // Default title for root layout
   },
   description:
     "Edit, create, and align SRT subtitle and captions files easily with this free, open-source, web-based editor. Features video preview and waveform visualization. No signup required.",
@@ -29,7 +28,7 @@ export const metadata: Metadata = {
     // title: Will use title.default or template from above
     // description: Will use the main description from above
     url: "https://subtitle-editor.org",
-    siteName: "Subtitle Editor",
+    siteName: "Éditeur de sous-titre Ouide",
     images: [
       {
         url: "/badge-cc.svg", // Placeholder - recommend replacing with PNG/JPG 1200x630 later
@@ -53,24 +52,6 @@ export default function RootLayout({
       >
         {children}
         <Toaster />
-        {/* Google Ads Tag */}
-        <Script
-          strategy="afterInteractive"
-          src="https://www.googletagmanager.com/gtag/js?id=AW-10839665138"
-        />
-        <Script id={googleAdsId} strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'AW-10839665138');
-          `}
-        </Script>
-        <Script
-          strategy="worker"
-          src="https://cloud.umami.is/script.js"
-          data-website-id="505c9992-e14c-483a-aa4c-542fb097c809"
-        />
       </body>
     </html>
   );
